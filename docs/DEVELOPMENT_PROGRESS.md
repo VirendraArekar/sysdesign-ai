@@ -76,7 +76,20 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 - **Status**: COMPLETED
 
 ### Phase 13 & 14: DevOps, Docker Compose, CI/CD, Monitoring, Testing Suite & Deployment
-- **Scope**: Production multi-stage Dockerfiles for backend (Eclipse Temurin JDK & minimal JRE with unprivileged user) and frontend (Node.js 22 + Nginx Alpine), Nginx reverse proxy configuration supporting WebSocket STOMP protocol, `/api/` routing, security headers, and gzip compression. Full multi-service `docker-compose.yml` orchestrating PostgreSQL 16 with pgvector extension, Redis 7 cache, Spring Boot backend, Vite frontend, Prometheus metrics scraper, and Grafana monitoring dashboard. GitHub Actions CI/CD pipeline (`.github/workflows/ci.yml`) automating Java tests, Vitest frontend tests, and TypeScript production build on push/PR to main. k6 load testing suite validating $p_{95} < 250\text{ms}$ latency SLOs.
+- **Scope**: Production multi-stage Dockerfiles for backend (Maven 3.9 + Eclipse Temurin 21 JRE minimal runtime with unprivileged `appuser`) and frontend (Node.js 22 + Nginx Alpine), Nginx reverse proxy configuration supporting WebSocket STOMP protocol, `/api/` routing, security headers, and gzip compression. Full multi-service `docker-compose.yml` orchestrating PostgreSQL 16 with pgvector extension, Redis 7 cache, Spring Boot backend, Vite frontend, Prometheus metrics scraper, and Grafana monitoring dashboard. GitHub Actions CI/CD pipeline (`.github/workflows/ci.yml`) automating Java tests, Vitest frontend tests, and TypeScript production build on push/PR to main. k6 load testing suite validating $p_{95} < 250\text{ms}$ latency SLOs.
+- **Docker Compose Stack Verification**:
+  - `sysdesign-postgres`: PostgreSQL 16 + pgvector running healthy on internal port 5432 and host port 5434.
+  - `sysdesign-redis`: Redis 7 running healthy on port 6379.
+  - `sysdesign-backend`: Spring Boot 3.4 / Java 21 API running healthy on port 8080 with Actuator, Swagger, and Flyway migrations applied.
+  - `sysdesign-frontend`: Nginx Alpine serving React 19 SPA running healthy on port 3000 with reverse-proxy routing to `/api/`, `/actuator/`, and `/ws/`.
+  - `sysdesign-prometheus`: Prometheus server scraping `/actuator/prometheus` running on port 9090.
+  - `sysdesign-grafana`: Grafana dashboard running on port 3001.
+- **Bugs Fixed During Docker Stack Verification**:
+  1. *Backend Dockerfile Missing Wrapper*: Switched from non-existent `backend/mvnw` to multi-stage `maven:3.9-eclipse-temurin-21-alpine` builder with `mvn dependency:go-offline` caching.
+  2. *Build Context Optimization*: Added `.dockerignore` ignoring `node_modules/`, `target/`, and `.git/` to reduce build context from ~500MB to ~400KB.
+  3. *Host Port Allocation Conflicts*: Changed default compose host port mapping for postgres to `${DOCKER_DB_PORT:-5434}:5432` and frontend to `${FRONTEND_PORT:-3000}:80` to eliminate collisions with any existing host services.
+  4. *Hibernate 6 Schema Validation on JSONB*: Added `@JdbcTypeCode(SqlTypes.JSON)` to `ArchitectureDiagram`, `LearningContent`, `InterviewEvaluation`, `HldProblem`, `LldProblem`, and `QuestionBankItem` to map PostgreSQL `jsonb` columns to Hibernate JSON type cleanly. Set `ddl-auto: none` in production to allow Flyway to be the single source of truth.
+  5. *Alpine Nginx IPv6 Healthcheck*: Added `listen [::]:80;` to `docker/nginx.conf` and updated frontend healthcheck to target `http://127.0.0.1:80/` to resolve IPv6 loopback connection refusal on Alpine Linux.
 - **Backend & DevOps**: `docker/Dockerfile.backend`, `docker/Dockerfile.frontend`, `docker/nginx.conf`, `docker/docker-compose.yml`, `docker/prometheus.yml`, `docker/k6-load-test.js`, `.github/workflows/ci.yml`.
-- **Tests**: 28 backend unit and integration tests passing (`mvn test` exit code 0); Vitest frontend unit tests passing; Vite production build passing (`npm run build` exit code 0).
+- **Tests**: 28 backend unit and integration tests passing (`mvn test` exit code 0); Vitest frontend unit tests passing; Vite production build passing (`npm run build` exit code 0); all 6 Docker containers running healthy with HTTP 200 responses verified on all endpoints.
 - **Status**: COMPLETED

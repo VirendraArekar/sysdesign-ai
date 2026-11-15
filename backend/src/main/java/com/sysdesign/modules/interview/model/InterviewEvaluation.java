@@ -1,6 +1,8 @@
 package com.sysdesign.modules.interview.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -20,27 +22,34 @@ public class InterviewEvaluation {
     @Column(name = "overall_score", nullable = false, precision = 5, scale = 2)
     private BigDecimal overallScore;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "category_scores", nullable = false, columnDefinition = "jsonb")
     private String categoryScores;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "strengths", columnDefinition = "jsonb")
     private String strengths = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "weaknesses", columnDefinition = "jsonb")
     private String weaknesses = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "missing_concepts", columnDefinition = "jsonb")
     private String missingConcepts = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "incorrect_assumptions", columnDefinition = "jsonb")
     private String incorrectAssumptions = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "suggested_improvements", columnDefinition = "jsonb")
     private String suggestedImprovements = "[]";
 
     @Column(name = "ideal_answer_outline", columnDefinition = "TEXT")
     private String idealAnswerOutline;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "recommended_topics", columnDefinition = "jsonb")
     private String recommendedTopics = "[]";
 

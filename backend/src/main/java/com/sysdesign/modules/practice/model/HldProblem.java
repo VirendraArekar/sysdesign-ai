@@ -1,6 +1,8 @@
 package com.sysdesign.modules.practice.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 
 @Entity
@@ -23,27 +25,34 @@ public class HldProblem {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "functional_requirements", columnDefinition = "jsonb")
     private String functionalRequirements = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "non_functional_requirements", columnDefinition = "jsonb")
     private String nonFunctionalRequirements = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "capacity_estimation", columnDefinition = "jsonb")
     private String capacityEstimation = "{}";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "api_design", columnDefinition = "jsonb")
     private String apiDesign = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "database_schema", columnDefinition = "jsonb")
     private String databaseSchema = "{}";
 
     @Column(name = "architecture_diagram_mermaid", nullable = false, columnDefinition = "TEXT")
     private String architectureDiagramMermaid;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "deep_dive_topics", columnDefinition = "jsonb")
     private String deepDiveTopics = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "trade_offs", columnDefinition = "jsonb")
     private String tradeOffs = "[]";
 

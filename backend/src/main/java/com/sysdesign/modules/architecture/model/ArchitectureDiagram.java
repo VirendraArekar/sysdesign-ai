@@ -2,6 +2,8 @@ package com.sysdesign.modules.architecture.model;
 
 import com.sysdesign.modules.user.model.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -23,10 +25,12 @@ public class ArchitectureDiagram {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "canvas_data", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "canvas_data", nullable = false, columnDefinition = "jsonb")
     private String canvasData;
 
-    @Column(name = "ai_review", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "ai_review", columnDefinition = "jsonb")
     private String aiReview;
 
     @Column(name = "created_at", nullable = false, updatable = false)

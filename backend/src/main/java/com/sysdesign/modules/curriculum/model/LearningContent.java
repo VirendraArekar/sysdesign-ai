@@ -2,6 +2,8 @@ package com.sysdesign.modules.curriculum.model;
 
 import com.sysdesign.common.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.util.UUID;
 
 @Entity
@@ -25,18 +27,23 @@ public class LearningContent extends BaseEntity {
     @Column(name = "architecture_diagram_mermaid", columnDefinition = "TEXT")
     private String architectureDiagramMermaid;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "advantages", columnDefinition = "jsonb")
     private String advantages = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "disadvantages", columnDefinition = "jsonb")
     private String disadvantages = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "real_world_use_cases", columnDefinition = "jsonb")
     private String realWorldUseCases = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "interview_questions", columnDefinition = "jsonb")
     private String interviewQuestions = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "practical_exercises", columnDefinition = "jsonb")
     private String practicalExercises = "[]";
 

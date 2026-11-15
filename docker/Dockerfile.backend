@@ -1,18 +1,17 @@
 # -----------------------------------------------------------------------------
-# Stage 1: Build Java 25 / Spring Boot Application with Maven
+# Stage 1: Build Spring Boot Application with Maven
 # -----------------------------------------------------------------------------
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /app
 
-# Copy Maven wrapper and POM first for dependency caching
-COPY backend/.mvn/ .mvn/
-COPY backend/mvnw backend/pom.xml ./
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+# Copy POM first for dependency caching
+COPY backend/pom.xml ./
+RUN mvn dependency:go-offline -B
 
 # Copy backend source code and build production jar
 COPY backend/src/ src/
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 # -----------------------------------------------------------------------------
 # Stage 2: Minimal Production JRE Runtime

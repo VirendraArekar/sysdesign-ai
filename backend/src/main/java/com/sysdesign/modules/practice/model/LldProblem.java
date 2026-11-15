@@ -1,6 +1,8 @@
 package com.sysdesign.modules.practice.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 
 @Entity
@@ -20,9 +22,11 @@ public class LldProblem {
     @Column(name = "problem_statement", nullable = false, columnDefinition = "TEXT")
     private String problemStatement;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "solid_principles_applied", columnDefinition = "jsonb")
     private String solidPrinciplesApplied = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "design_patterns_used", columnDefinition = "jsonb")
     private String designPatternsUsed = "[]";
 
