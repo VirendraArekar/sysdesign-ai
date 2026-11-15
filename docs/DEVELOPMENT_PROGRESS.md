@@ -19,8 +19,8 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 5** | AI Integration Engine & Configurable Gemini Provider | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 99f216e | SUCCESS |
 | **Phase 6** | AI Interview Simulator & Real-time WebSocket Protocol | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 99f216e | SUCCESS |
 | **Phase 7** | Answer Evaluation Engine, 15-Category Scoring & Report Generator | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 99f216e | SUCCESS |
-| **Phase 8** | Interactive Architecture Designer (React Flow Canvas & AI Analysis) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | Pending | Pending |
-| **Phase 9** | Interactive Simulators & Capacity Estimation Calculators (18 tools) | Planned | Planned | Planned | Planned | Pending | Pending |
+| **Phase 8** | Interactive Architecture Designer (React Flow Canvas & AI Analysis) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | f377ea7 | SUCCESS |
+| **Phase 9** | Interactive Simulators & Capacity Estimation Calculators (18 tools) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | Pending | Pending |
 | **Phase 10** | Analytics, Learning Dashboard, Progress Tracking & Readiness Score | Planned | Planned | Planned | Planned | Pending | Pending |
 | **Phase 11** | RAG Architecture, Vector Search (pgvector) & Personalized Learning | Planned | Planned | Planned | Planned | Pending | Pending |
 | **Phase 12** | Admin Dashboard, Monetization & AI Token Quotas | Planned | Planned | Planned | Planned | Pending | Pending |
@@ -45,4 +45,11 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 - **Frontend**: Custom node component `ArchitectureNode.tsx`, interactive canvas page `ArchitectureDesignerPage.tsx` with MiniMap, Controls, Background, Component Palette, Inspector Drawer, AI Audit Tab with health score gauge, and AI Auto-Design synthesizer.
 - **Database**: PostgreSQL `architecture_diagrams` table.
 - **Tests**: `ArchitectureServiceTest` with 4 test scenarios passing; frontend sanity test passing; full Vite production build passing.
+- **Status**: COMPLETED
+
+### Phase 9: Distributed Simulators & Capacity Estimation Suite (18 Tools)
+- **Scope**: Complete suite of 18 interactive distributed systems calculators and visualizers across 4 suites: Capacity Estimation (QPS, RPS, TPS, DAU, Peak Multiplier, Read/Write Ratios, Daily Storage GB, 5-Year Storage TB, Ingress/Egress Bandwidth, 80/20 Redis RAM Sizing), High Availability & SLA Downtime Budget (seconds/minutes per day/month/year for 99.0% - 99.999%), Little's Law Concurrency & Worker Pod Sizing ($L = \lambda \times W$), Latency Numbers Every Programmer Should Know, Consistent Hashing 360° Ring Visualizer with Virtual Nodes & minimal key churn, Token Bucket Rate Limiter with live traffic simulation, Circuit Breaker 3-state machine (Closed, Open, Half-Open), LRU Cache Eviction Doubly Linked List pipeline, and Bloom Filter probabilistic membership tester.
+- **Backend**: Service `SimulatorService`, controller `SimulatorController`, DTOs (`CapacityEstimationRequest`, `CapacityEstimationResult`, `AvailabilityRequest`, `AvailabilityResult`, `ConsistentHashingRequest`, `ConsistentHashingResult`, `BloomFilterRequest`, `BloomFilterResult`, `LittlesLawRequest`, `LittlesLawResult`).
+- **Frontend**: `SimulatorsHubPage.tsx` with 4 interactive visualizer suites, animated SVG Consistent Hashing ring, live Token Bucket animation with refill timer, Circuit Breaker state transitions, LRU pipeline, and Bloom Filter checker.
+- **Tests**: `SimulatorServiceTest` with 5 comprehensive test cases passing; frontend sanity check and Vite build passing.
 - **Status**: COMPLETED

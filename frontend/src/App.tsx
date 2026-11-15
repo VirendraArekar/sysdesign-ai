@@ -16,6 +16,7 @@ import QuestionBankPage from './pages/practice/QuestionBankPage';
 import InterviewPage from './pages/interview/InterviewPage';
 import InterviewHistoryPage from './pages/interview/InterviewHistoryPage';
 import ArchitectureDesignerPage from './pages/designer/ArchitectureDesignerPage';
+import SimulatorsHubPage from './pages/simulators/SimulatorsHubPage';
 import { 
   BookOpen, 
   Layers, 
@@ -190,6 +191,7 @@ export const App: React.FC = () => {
           <Route path="/interview" element={<InterviewPage />} />
           <Route path="/interview/history" element={<InterviewHistoryPage />} />
           <Route path="/designer" element={<ArchitectureDesignerPage />} />
+          <Route path="/simulators" element={<SimulatorsHubPage />} />
         </Routes>
 
         {/* Footer */}
