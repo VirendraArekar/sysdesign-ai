@@ -6,6 +6,8 @@ import { logout } from './store/slices/authSlice';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ProfilePage from './pages/profile/ProfilePage';
+import CurriculumListPage from './pages/curriculum/CurriculumListPage';
+import TopicDetailPage from './pages/curriculum/TopicDetailPage';
 import { 
   BookOpen, 
   Layers, 
@@ -167,6 +169,8 @@ export const App: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/curriculum" element={<CurriculumListPage />} />
+          <Route path="/curriculum/topic/:topicId" element={<TopicDetailPage />} />
         </Routes>
 
         {/* Footer */}
