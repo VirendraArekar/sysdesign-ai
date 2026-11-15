@@ -21,8 +21,8 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 7** | Answer Evaluation Engine, 15-Category Scoring & Report Generator | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 99f216e | SUCCESS |
 | **Phase 8** | Interactive Architecture Designer (React Flow Canvas & AI Analysis) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | f377ea7 | SUCCESS |
 | **Phase 9** | Interactive Simulators & Capacity Estimation Calculators (18 tools) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | cd7c7df | SUCCESS |
-| **Phase 10** | Analytics, Learning Dashboard, Progress Tracking & Readiness Score | COMPLETED | COMPLETED | COMPLETED | COMPLETED | Pending | Pending |
-| **Phase 11** | RAG Architecture, Vector Search (pgvector) & Personalized Learning | Planned | Planned | Planned | Planned | Pending | Pending |
+| **Phase 10** | Analytics, Learning Dashboard, Progress Tracking & Readiness Score | COMPLETED | COMPLETED | COMPLETED | COMPLETED | d1460b2 | SUCCESS |
+| **Phase 11** | RAG Architecture, Vector Search (pgvector) & Personalized Learning | COMPLETED | COMPLETED | COMPLETED | COMPLETED | Pending | Pending |
 | **Phase 12** | Admin Dashboard, Monetization & AI Token Quotas | Planned | Planned | Planned | Planned | Pending | Pending |
 | **Phase 13** | Comprehensive Testing Suite, Security Hardening & Optimizations | Planned | Planned | Planned | Planned | Pending | Pending |
 | **Phase 14** | DevOps, Docker Compose, CI/CD, Monitoring & Production Deployment | Planned | Planned | Planned | Planned | Pending | Pending |
@@ -59,4 +59,11 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 - **Backend**: Service `AnalyticsService`, controller `AnalyticsController`, DTO `DashboardMetricsResponse`, integration with `LearningProgressRepository`, `TopicRepository`, `InterviewSessionRepository`, and `ArchitectureDiagramRepository`.
 - **Frontend**: `DashboardPage.tsx` with Recharts radar and bar visualizations, dynamic readiness calculation, personalized AI recommendations, and route `/dashboard` wiring.
 - **Tests**: `AnalyticsServiceTest` passing; frontend sanity check and Vite build passing.
+- **Status**: COMPLETED
+
+### Phase 11: RAG Architecture & Semantic Vector Search
+- **Scope**: Retrieval-Augmented Generation (RAG) engine indexing 13 curriculum modules, 40+ HLD blueprints, and 20+ LLD problems. Semantic vector similarity search, confidence scoring, cited architectural references, and 'Ask AI Architect' grounded technical question answering.
+- **Backend**: Service `RagSearchService`, controller `RagSearchController`, DTOs (`RagQueryRequest`, `RagSearchResult`, `RagAnswerResponse`), integration with `TopicRepository`, `HldProblemRepository`, `LldProblemRepository`, and `AiProvider`.
+- **Frontend**: Global `SemanticSearchModal.tsx` accessible via header button or `Cmd+K` / `Ctrl+K` keyboard shortcut with instant debounced semantic querying, similarity percentages, and grounded AI answer generation with cited guides.
+- **Tests**: `RagSearchServiceTest` with 2 comprehensive test scenarios passing; frontend sanity check and Vite build passing.
 - **Status**: COMPLETED

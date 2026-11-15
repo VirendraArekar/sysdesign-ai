@@ -18,6 +18,7 @@ import InterviewHistoryPage from './pages/interview/InterviewHistoryPage';
 import ArchitectureDesignerPage from './pages/designer/ArchitectureDesignerPage';
 import SimulatorsHubPage from './pages/simulators/SimulatorsHubPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import SemanticSearchModal from './components/search/SemanticSearchModal';
 import { 
   BookOpen, 
   Layers, 
@@ -30,7 +31,8 @@ import {
   Sparkles,
   ShieldCheck,
   User,
-  LogOut
+  LogOut,
+  Search
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
@@ -99,6 +101,7 @@ const LandingPage: React.FC = () => {
 export const App: React.FC = () => {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const [searchOpen, setSearchOpen] = React.useState(false);
 
   return (
     <BrowserRouter>
@@ -149,6 +152,16 @@ export const App: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-xs text-slate-400 hover:text-white transition-all cursor-pointer"
+              title="Search System Design Topics (Cmd+K)"
+            >
+              <Search className="w-3.5 h-3.5 text-[#06B6D4]" />
+              <span>Search & Ask AI...</span>
+              <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-[#0B1020] text-slate-400 font-mono border border-[#334155]">⌘K</kbd>
+            </button>
+
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
                 <Link to="/profile" className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-sm text-white transition-all">
@@ -195,6 +208,9 @@ export const App: React.FC = () => {
           <Route path="/designer" element={<ArchitectureDesignerPage />} />
           <Route path="/simulators" element={<SimulatorsHubPage />} />
         </Routes>
+
+        {/* Global Semantic Search & RAG Modal */}
+        <SemanticSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
         {/* Footer */}
         <footer className="border-t border-[#1E293B] py-6 px-6 text-center text-xs text-slate-500">

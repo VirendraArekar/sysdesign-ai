@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/architecture/generate").permitAll()
                 .requestMatchers("/api/v1/simulators/**").permitAll()
                 .requestMatchers("/api/v1/analytics/**").permitAll()
+                .requestMatchers("/api/v1/rag/**").permitAll()
                 // Admin endpoints
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 // All other endpoints require authentication
