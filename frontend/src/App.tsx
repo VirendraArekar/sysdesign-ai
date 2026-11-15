@@ -18,6 +18,7 @@ import InterviewHistoryPage from './pages/interview/InterviewHistoryPage';
 import ArchitectureDesignerPage from './pages/designer/ArchitectureDesignerPage';
 import SimulatorsHubPage from './pages/simulators/SimulatorsHubPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import SemanticSearchModal from './components/search/SemanticSearchModal';
 import { 
   BookOpen, 
@@ -149,6 +150,9 @@ export const App: React.FC = () => {
             <Link to="/questions" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
               Questions
             </Link>
+            <Link to="/admin" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
+              Admin
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -207,6 +211,7 @@ export const App: React.FC = () => {
           <Route path="/interview/history" element={<InterviewHistoryPage />} />
           <Route path="/designer" element={<ArchitectureDesignerPage />} />
           <Route path="/simulators" element={<SimulatorsHubPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
         </Routes>
 
         {/* Global Semantic Search & RAG Modal */}

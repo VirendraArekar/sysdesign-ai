@@ -22,8 +22,8 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 8** | Interactive Architecture Designer (React Flow Canvas & AI Analysis) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | f377ea7 | SUCCESS |
 | **Phase 9** | Interactive Simulators & Capacity Estimation Calculators (18 tools) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | cd7c7df | SUCCESS |
 | **Phase 10** | Analytics, Learning Dashboard, Progress Tracking & Readiness Score | COMPLETED | COMPLETED | COMPLETED | COMPLETED | d1460b2 | SUCCESS |
-| **Phase 11** | RAG Architecture, Vector Search (pgvector) & Personalized Learning | COMPLETED | COMPLETED | COMPLETED | COMPLETED | Pending | Pending |
-| **Phase 12** | Admin Dashboard, Monetization & AI Token Quotas | Planned | Planned | Planned | Planned | Pending | Pending |
+| **Phase 11** | RAG Architecture, Vector Search (pgvector) & Personalized Learning | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 20f0edd | SUCCESS |
+| **Phase 12** | Admin Dashboard, Monetization & AI Token Quotas | COMPLETED | COMPLETED | COMPLETED | COMPLETED | Pending | Pending |
 | **Phase 13** | Comprehensive Testing Suite, Security Hardening & Optimizations | Planned | Planned | Planned | Planned | Pending | Pending |
 | **Phase 14** | DevOps, Docker Compose, CI/CD, Monitoring & Production Deployment | Planned | Planned | Planned | Planned | Pending | Pending |
 
@@ -66,4 +66,11 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 - **Backend**: Service `RagSearchService`, controller `RagSearchController`, DTOs (`RagQueryRequest`, `RagSearchResult`, `RagAnswerResponse`), integration with `TopicRepository`, `HldProblemRepository`, `LldProblemRepository`, and `AiProvider`.
 - **Frontend**: Global `SemanticSearchModal.tsx` accessible via header button or `Cmd+K` / `Ctrl+K` keyboard shortcut with instant debounced semantic querying, similarity percentages, and grounded AI answer generation with cited guides.
 - **Tests**: `RagSearchServiceTest` with 2 comprehensive test scenarios passing; frontend sanity check and Vite build passing.
+- **Status**: COMPLETED
+
+### Phase 12: Admin Dashboard, Monetization & AI Token Quotas
+- **Scope**: Platform administration and monetization suite supporting Free, Pro, and Enterprise subscription tiers. Daily AI token quota enforcement (50k, 500k, 2M), token consumption telemetry broken down by feature (interviews, audits, search, evaluation), JVM memory monitoring, user management table with tier assignment and suspension toggles, and tier monetization matrix.
+- **Backend**: Entity `Subscription`, repository `SubscriptionRepository`, DTOs (`AdminOverviewResponse`, `UserManagementItem`, `UserTierUpdateRequest`), service `AdminService`, controller `AdminController`, integration with `AiUsageLogRepository` and `UserRepository`.
+- **Frontend**: `AdminDashboardPage.tsx` with Recharts token consumption breakdown, candidate management table with tier modification and activation toggles, JVM infrastructure health indicators, and route `/admin`.
+- **Tests**: `AdminServiceTest` with 3 test cases passing; frontend sanity test and Vite production build passing.
 - **Status**: COMPLETED
