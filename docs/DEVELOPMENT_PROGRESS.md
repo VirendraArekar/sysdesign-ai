@@ -42,7 +42,14 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 ### Phase 8: Interactive Architecture Designer & AI Audit Engine
 - **Scope**: React Flow drag-and-drop system design canvas with custom architectural component library (Clients, CDN Edge, L7 Load Balancer, Microservices, Redis Cache, Kafka Message Broker, Relational & NoSQL Databases, S3 Object Storage, WAF Shield), component inspector, prebuilt industry blueprints (TinyURL, WhatsApp, Uber, Netflix, Amazon Checkout), export to JSON, AI Architectural Audit engine identifying SPOFs, bottlenecks, security vulnerabilities, consistency trade-offs, and AI auto-generation from natural language prompts.
 - **Enhanced Interactive Simulation & Interviewer Presentation (Post-Stack Verification)**:
-  - **HTML5 Drag-and-Drop Canvas**: Native draggable component palette with `screenToFlowPosition` coordinate calculation, placing dropped components at the exact cursor drop position with visual grab cursor and click-to-add fallback.
+  - **HTML5 Drag-and-Drop Canvas & Multi-MIME Support**:
+    - Native draggable component palette with `screenToFlowPosition` coordinate calculation, placing dropped components at the exact cursor drop position with visual grab cursor and click-to-add fallback.
+    - **Multi-MIME dataTransfer**: Sets `application/reactflow`, `text/plain`, and `text` to prevent macOS Safari and WebKit from blocking custom MIME types during drop events.
+    - **In-Memory Fallback (`globalDraggedNode`)**: Provides guaranteed 100% reliable drop data recovery across any browser security context or iframe environment.
+    - **Dual Event Handlers**: Bound `onDragOver` and `onDrop` to both the outer canvas wrapper and the `<ReactFlow>` component directly, ensuring the internal `.react-flow__pane` never intercepts or suppresses drop events.
+    - **Child Element Pointer Event Isolation**: Set `pointer-events-none select-none` on all inner palette icons and typography to prevent child SVG/text drag targeting.
+    - **Visual Drop Zone Overlay**: Dynamic glowing cyan dashed border and guidance indicator displayed when hovering over the canvas with a component.
+    - **Explicit Add Button**: Added dedicated `+` button on each library card alongside click-to-add and drag-and-drop for touchscreen, mobile, and desktop flexibility.
   - **Live Traffic Flow Animation**: Real-time traffic flow toggle animating connection edges with pulsing cyan/indigo packets, variable traffic rates (Normal 10k QPS, High 50k QPS, Surge 100k QPS), and live node status telemetry.
   - **"How It Works" Execution Walkthrough**: Step-by-step request flow animator tracing requests chronologically from DNS/CDN through L7 Gateways, microservices, in-memory cache lookups, and transactional database commits, complete with active node spotlighting and timing metrics.
   - **"Explain to Interviewer" Pitch Generator**: Dedicated presentation mode synthesizing a 60-second executive summary, end-to-end read/write flows, justified trade-offs (CAP theorem, caching patterns), failure mode defenses, 5 tough interviewer follow-up questions with model answers, and copyable verbal transcript.

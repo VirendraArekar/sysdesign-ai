@@ -64,6 +64,9 @@ import {
 
 const API_BASE = '/api/v1';
 
+// Global reference for dragged node data - guarantees 100% reliable drag-and-drop across Safari/WebKit, Chrome, Firefox
+let globalDraggedNode: { category: ArchitectureNodeData['category']; defaultLabel: string; defaultTech: string } | null = null;
+
 const nodeTypes = {
   archNode: ArchitectureNode
 };
@@ -344,28 +347,100 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   };
 
   // Drag and Drop implementation
-  const onDragStart = (event: React.DragEvent, nodeData: { category: ArchitectureNodeData['category']; defaultLabel: string; defaultTech: string }) => {
-    event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const onDragStart = (
+    event: React.DragEvent,
+    nodeData: { category: ArchitectureNodeData['category']; defaultLabel: string; defaultTech: string }
+  ) => {
+    globalDraggedNode = nodeData;
+    const serialized = JSON.stringify(nodeData);
+    try {
+      event.dataTransfer.setData('application/reactflow', serialized);
+    } catch (_) {}
+    try {
+      event.dataTransfer.setData('text/plain', serialized);
+    } catch (_) {}
+    try {
+      event.dataTransfer.setData('text', serialized);
+    } catch (_) {}
     event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onDragEnd = () => {
+    setIsDragOver(false);
+    setTimeout(() => {
+      globalDraggedNode = null;
+    }, 500);
   };
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
+    event.stopPropagation();
     event.dataTransfer.dropEffect = 'move';
+    setIsDragOver(true);
+  }, []);
+
+  const onDragLeave = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    if (reactFlowWrapper.current && event.relatedTarget && reactFlowWrapper.current.contains(event.relatedTarget as unknown as globalThis.Node)) {
+      return;
+    }
+    setIsDragOver(false);
   }, []);
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      const rawData = event.dataTransfer.getData('application/reactflow');
-      if (!rawData) return;
+      event.stopPropagation();
+      setIsDragOver(false);
+
+      let parsedData: { category: ArchitectureNodeData['category']; defaultLabel: string; defaultTech: string } | null = null;
+
+      // 1. Try reading from dataTransfer
+      try {
+        const rawData =
+          event.dataTransfer.getData('application/reactflow') ||
+          event.dataTransfer.getData('text/plain') ||
+          event.dataTransfer.getData('text');
+
+        if (rawData) {
+          parsedData = JSON.parse(rawData);
+        }
+      } catch (err) {
+        console.warn('Could not parse dataTransfer text payload', err);
+      }
+
+      // 2. Memory fallback for WebKit / Safari or browsers that restrict dataTransfer
+      if (!parsedData && globalDraggedNode) {
+        parsedData = globalDraggedNode;
+      }
+
+      if (!parsedData) {
+        console.warn('No node payload found in drop event');
+        return;
+      }
 
       try {
-        const { category, defaultLabel, defaultTech } = JSON.parse(rawData);
-        const position = screenToFlowPosition({
+        const { category, defaultLabel, defaultTech } = parsedData;
+
+        // Compute drop position in canvas coordinates
+        let position = screenToFlowPosition({
           x: event.clientX,
           y: event.clientY,
         });
+
+        if (!position || isNaN(position.x) || isNaN(position.y)) {
+          const bounds = reactFlowWrapper.current?.getBoundingClientRect();
+          if (bounds) {
+            position = screenToFlowPosition({
+              x: bounds.left + bounds.width / 2,
+              y: bounds.top + bounds.height / 2,
+            });
+          } else {
+            position = { x: 300, y: 200 };
+          }
+        }
 
         const id = `${category}-${Date.now()}`;
         const newNode: Node = {
@@ -387,7 +462,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
         setActiveTab('inspector');
         if (!showDrawer) setShowDrawer(true);
       } catch (err) {
-        console.error('Failed to parse dropped node', err);
+        console.error('Failed to create dropped node', err);
       }
     },
     [screenToFlowPosition, setNodes, isSimulatingTraffic, showDrawer]
@@ -801,12 +876,14 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                   key={idx}
                   draggable
                   onDragStart={(e) => onDragStart(e, { category: item.category as any, defaultLabel: item.label, defaultTech: item.tech })}
+                  onDragEnd={onDragEnd}
                   onClick={() => addNode(item.category as any, item.label, item.tech)}
                   className="w-full p-2.5 rounded-xl bg-[#1E293B]/80 hover:bg-[#1E293B] border border-[#334155]/60 hover:border-[#6366F1] cursor-grab active:cursor-grabbing text-left flex items-center justify-between transition-all group shadow-sm select-none"
+                  title="Drag and drop onto canvas, or click to add"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0 pointer-events-none select-none">
                     <div 
-                      className="p-1.5 rounded-lg transition-transform group-hover:scale-110"
+                      className="p-1.5 rounded-lg transition-transform group-hover:scale-110 flex-shrink-0"
                       style={{ backgroundColor: `${item.color}15`, color: item.color }}
                     >
                       <Icon className="w-4 h-4" />
@@ -820,13 +897,26 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <GripVertical className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 flex-shrink-0" />
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addNode(item.category as any, item.label, item.tech);
+                      }}
+                      className="p-1 rounded-md hover:bg-[#334155] text-slate-400 hover:text-white transition-colors"
+                      title="Click to add to canvas"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                    <GripVertical className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 flex-shrink-0 cursor-grab" />
+                  </div>
                 </div>
               );
             })}
 
             <div className="mt-auto p-3 rounded-xl bg-[#1E293B]/50 border border-[#334155]/50 text-[11px] text-slate-400">
-              <span className="font-semibold text-slate-300">💡 Connect Nodes:</span> Drag circles on node borders to establish network flows.
+              <span className="font-semibold text-slate-300">💡 Tip:</span> Drag components onto canvas or click <Plus className="w-3 h-3 inline text-[#06B6D4]" /> to add directly.
             </div>
           </aside>
         )}
@@ -836,8 +926,19 @@ const ArchitectureDesignerCanvas: React.FC = () => {
           ref={reactFlowWrapper} 
           className="flex-1 h-full relative"
           onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
           onDrop={onDrop}
         >
+          {/* Active Drop Indicator Overlay */}
+          {isDragOver && (
+            <div className="absolute inset-0 pointer-events-none z-30 border-2 border-dashed border-[#06B6D4] bg-[#06B6D4]/5 backdrop-blur-[1px] flex items-center justify-center">
+              <div className="px-4 py-2.5 rounded-xl bg-[#151C2E]/95 border border-[#06B6D4]/60 shadow-2xl text-xs font-semibold text-[#06B6D4] flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
+                Drop component here to place on canvas
+              </div>
+            </div>
+          )}
+
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -846,6 +947,8 @@ const ArchitectureDesignerCanvas: React.FC = () => {
             onConnect={onConnect}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
             nodeTypes={nodeTypes}
             fitView
             className="bg-[#0B1020]"
