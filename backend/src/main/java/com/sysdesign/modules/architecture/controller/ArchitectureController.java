@@ -78,4 +78,11 @@ public class ArchitectureController {
         AiGenerateResponse generated = architectureService.generateArchitecture(request);
         return ApiResponse.ok("Architecture generated successfully", generated);
     }
+
+    @PostMapping("/explain")
+    @Operation(summary = "Generate interview explanation and walkthrough script for architecture diagram")
+    public ApiResponse<AiExplainResponse> explainArchitecture(@Valid @RequestBody AiExplainRequest request) {
+        AiExplainResponse explanation = architectureService.explainArchitecture(request);
+        return ApiResponse.ok("Architecture explanation generated", explanation);
+    }
 }

@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/architecture/templates").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/architecture/audit").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/architecture/generate").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/architecture/explain").permitAll()
                 .requestMatchers("/api/v1/simulators/**").permitAll()
                 .requestMatchers("/api/v1/analytics/**").permitAll()
                 .requestMatchers("/api/v1/rag/**").permitAll()

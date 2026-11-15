@@ -230,6 +230,236 @@ public class ArchitectureService {
         }
     }
 
+    public AiExplainResponse explainArchitecture(AiExplainRequest request) {
+        String systemPrompt = """
+                You are a Principal Software Architect at Google or Meta conducting a Senior/Staff System Design interview.
+                The candidate has designed a system architecture topology with components (nodes) and data paths (edges).
+                
+                Generate a comprehensive, elite verbal explanation script and presentation guide that the candidate can speak to the interviewer.
+                
+                The response must cover:
+                1. elevatorPitch: A crisp, 60-second opening statement summarizing the overall system architecture, scale targets, and core tiering principles.
+                2. stepByStepFlow: Chronological step-by-step trace of how a request flows through the topology (stepNumber, component, action, protocol, latency, interviewerTalkingPoint).
+                3. tradeOffs: Critical architectural trade-offs explicitly justified (decision, chosenOption, alternativeOption, whyChosen, capPerspective).
+                4. failureModes: How the system handles failures (component, failureScenario, mitigation, blastRadius).
+                5. interviewerQuestions: 5 tough follow-up probing questions an L6/L7 interviewer will ask based on this design, with high-signal suggested answers (question, interviewerIntent, suggestedAnswer).
+                6. fullPresentationScript: Complete spoken transcript that the candidate can deliver verbatim during the interview walkthrough.
+                
+                Return a valid JSON object matching this schema:
+                {
+                  "elevatorPitch": "Opening executive summary...",
+                  "stepByStepFlow": [
+                    {
+                      "stepNumber": 1,
+                      "component": "Client Ingress",
+                      "action": "User action triggers HTTPS request",
+                      "protocol": "HTTPS / TLS 1.3",
+                      "latency": "< 10ms",
+                      "interviewerTalkingPoint": "Mention Anycast DNS routing and client-side retry with exponential backoff."
+                    }
+                  ],
+                  "tradeOffs": [
+                    {
+                      "decision": "Database Engine Choice",
+                      "chosenOption": "PostgreSQL with Read Replicas",
+                      "alternativeOption": "Apache Cassandra",
+                      "whyChosen": "Relational integrity and ACID transactions required for account ledger.",
+                      "capPerspective": "CP system prioritizing strong consistency over partition tolerance."
+                    }
+                  ],
+                  "failureModes": [
+                    {
+                      "component": "Redis Cache Cluster",
+                      "failureScenario": "Master node failure during peak traffic surge",
+                      "mitigation": "Redis Sentinel auto-promotes replica in < 3s; circuit breaker prevents DB thundering herd.",
+                      "blastRadius": "Temporary 5% increase in database read latency for keys on failing shard."
+                    }
+                  ],
+                  "interviewerQuestions": [
+                    {
+                      "question": "How do you prevent a cache stampede if a hot product cache key expires?",
+                      "interviewerIntent": "Testing concurrency control, distributed locks, and probabilistic early expiration.",
+                      "suggestedAnswer": "We use probabilistic early expiration (XFetch algorithm) combined with a Redis distributed lock (Redlock) so only 1 worker rebuilds the cache while others read the stale value."
+                    }
+                  ],
+                  "fullPresentationScript": "Complete spoken walkthrough script..."
+                }
+                Do not include markdown code block formatting (such as ```json). Output raw valid JSON only.
+                """;
+
+        String userMessage = String.format("Architecture Title: %s\nTarget Scale: %s\nGoal: %s\n\nCanvas Data:\n%s",
+                request.getTitle() != null ? request.getTitle() : "System Architecture",
+                request.getTargetScale() != null ? request.getTargetScale() : "100,000 QPS",
+                request.getSystemGoal() != null ? request.getSystemGoal() : "Production enterprise distributed system",
+                request.getCanvasData());
+
+        String rawResponse = aiProvider.generateResponse(systemPrompt, userMessage);
+
+        try {
+            String cleaned = rawResponse.replaceAll("(?s)```json\\s*", "").replaceAll("```", "").trim();
+            return objectMapper.readValue(cleaned, AiExplainResponse.class);
+        } catch (Exception e) {
+            log.warn("Failed to parse AI architecture explanation into JSON. Returning rule-based explanation. Raw response was: {}", rawResponse);
+            return generateRuleBasedExplanation(request);
+        }
+    }
+
+    private AiExplainResponse generateRuleBasedExplanation(AiExplainRequest request) {
+        String title = request.getTitle() != null ? request.getTitle() : "Distributed System Architecture";
+        String scale = request.getTargetScale() != null ? request.getTargetScale() : "100,000 QPS";
+
+        AiExplainResponse resp = new AiExplainResponse();
+        
+        resp.setElevatorPitch(String.format(
+                "\"This architecture for %s is engineered to reliably sustain %s under sub-25ms p99 latency targets with 99.999%% availability. " +
+                "At the ingress tier, global traffic is accelerated through Anycast DNS and Edge CDN caching, absorbing up to 80%% of static read traffic. " +
+                "Dynamic mutations pass to redundant L7 API Gateways that handle TLS offloading, token bucket rate limiting, and mTLS proxying to our stateless microservices. " +
+                "Data persistence leverages a Cache-Aside Redis cluster for sub-2ms lookups, backed by a multi-AZ sharded database with read replicas, " +
+                "while asynchronous operations and cross-service domain events are decoupled through Apache Kafka topics using the Transactional Outbox pattern.\"",
+                title, scale
+        ));
+
+        List<AiExplainResponse.StepFlowItem> steps = new ArrayList<>();
+        steps.add(new AiExplainResponse.StepFlowItem(
+                1, "Client Ingress & Edge Routing",
+                "User initiates an action on web/mobile apps. DNS resolves via Geo-DNS/Anycast to the nearest Edge Point of Presence (PoP).",
+                "HTTPS / HTTP/3", "< 15ms",
+                "Explain to the interviewer how Anycast routing minimizes network hops and terminates TCP/TLS handshakes close to the user."
+        ));
+        steps.add(new AiExplainResponse.StepFlowItem(
+                2, "Edge CDN & WAF Inspection",
+                "Edge CDN checks local SSD cache. Cache hit returns instantly. On cache miss, Cloudflare/AWS WAF evaluates request against DDoS & OWASP Top 10 rule engines.",
+                "TLS 1.3 / mTLS", "< 5ms",
+                "Highlight that terminating TLS at the edge reduces compute pressure on backend microservice pods."
+        ));
+        steps.add(new AiExplainResponse.StepFlowItem(
+                3, "L7 Load Balancing & Rate Limiting",
+                "Ingress controller (Envoy / Kong) enforces token-bucket rate limiting (100 req/sec per user) and routes traffic via least-connections algorithm.",
+                "gRPC / HTTP/2", "< 3ms",
+                "Discuss sticky sessions vs stateless tokens. Emphasize that stateless JWT validation enables zero-state horizontal autoscaling."
+        ));
+        steps.add(new AiExplainResponse.StepFlowItem(
+                4, "Stateless Microservices Compute",
+                "Containerized worker pods (Spring Boot 3.4 / Go) execute business logic, payload validation, and concurrency orchestration.",
+                "Internal RPC", "< 10ms",
+                "Mention Kubernetes Horizontal Pod Autoscaler (HPA) scaling pods dynamically based on CPU and request latency metrics."
+        ));
+        steps.add(new AiExplainResponse.StepFlowItem(
+                5, "Cache-Aside Query (Redis Cluster)",
+                "Service executes Cache-Aside lookup on Redis cluster using hash ring partitioning. Cache hits return in < 2ms without touching relational storage.",
+                "Redis RESP3 (TCP)", "< 2ms",
+                "Explain the 80/20 rule: 20% of active keys generate 80% of read traffic. Point out LRU eviction and jittered TTL to avoid cache stampede."
+        ));
+        steps.add(new AiExplainResponse.StepFlowItem(
+                6, "Persistent Storage Commit (Primary DB)",
+                "On cache miss or write mutation, transaction commits to PostgreSQL primary with Write-Ahead Logging (WAL) and synchronous replication to AZ standby.",
+                "JDBC Connection Pool", "< 8ms",
+                "Clarify isolation level (Read Committed) and explain why read replicas absorb read-heavy analytics and search queries."
+        ));
+        steps.add(new AiExplainResponse.StepFlowItem(
+                7, "Asynchronous Event Streaming (Kafka)",
+                "Domain events are published to Kafka topics using the Transactional Outbox pattern, enabling reliable event-driven consumer notifications and search indexing.",
+                "Kafka Binary Protocol", "Async (Fire & Forget)",
+                "Emphasize that decoupling downstream dependencies via Kafka ensures the user-facing request returns immediately without waiting for non-critical side effects."
+        ));
+        resp.setStepByStepFlow(steps);
+
+        List<AiExplainResponse.TradeOffItem> tradeOffs = new ArrayList<>();
+        tradeOffs.add(new AiExplainResponse.TradeOffItem(
+                "Caching Strategy",
+                "Cache-Aside Pattern",
+                "Write-Through Caching",
+                "Cache-Aside is resilient to cache crashes (fallback directly to DB) and only caches requested items, saving memory.",
+                "Accepts eventual consistency in exchange for maximum availability (AP perspective)."
+        ));
+        tradeOffs.add(new AiExplainResponse.TradeOffItem(
+                "Primary Storage Engine",
+                "PostgreSQL Multi-AZ with Read Replicas",
+                "Pure NoSQL Key-Value Store",
+                "ACID guarantees, foreign key relations, and indexing capabilities are essential for transactional integrity.",
+                "CP oriented for write transactions; AP oriented for read replicas with minor replication lag."
+        ));
+        tradeOffs.add(new AiExplainResponse.TradeOffItem(
+                "Inter-Service Communication",
+                "Hybrid (gRPC for Synchronous Internal, Kafka for Asynchronous Domain Events)",
+                "Pure Synchronous REST",
+                "Prevents temporal coupling and cascade timeouts across microservices under sudden load bursts.",
+                "Maximizes throughput and availability by decoupling critical write paths from analytics/indexing."
+        ));
+        resp.setTradeOffs(tradeOffs);
+
+        List<AiExplainResponse.FailureModeItem> failureModes = new ArrayList<>();
+        failureModes.add(new AiExplainResponse.FailureModeItem(
+                "Primary Database Instance Crash",
+                "Active primary node experiences kernel panic or hardware failure in Availability Zone A.",
+                "Multi-AZ automated failover (Patroni / AWS Aurora) promotes standby replica in Zone B to primary within 20 seconds. HikariCP reconnects automatically.",
+                "Short write unavailability (~20s); read traffic continues uninterrupted via independent read replicas."
+        ));
+        failureModes.add(new AiExplainResponse.FailureModeItem(
+                "Redis Cache Cluster Failure",
+                "One or more Redis master shards crash under memory pressure or network partition.",
+                "Resilience4j Circuit Breaker trips to Half-Open to throttle fallback DB queries; probabilistic early expiration and Redis Sentinel replica promotion restore cache.",
+                "Temporary 15% increase in database latency; circuit breakers prevent database collapse."
+        ));
+        failureModes.add(new AiExplainResponse.FailureModeItem(
+                "Sudden 10x Flash Traffic Spike",
+                "Unanticipated viral event or flash sale multiplies ingress traffic by 10x.",
+                "Edge CDN absorbs static requests; Envoy rate limiters reject excessive IP bursts with HTTP 429; K8s HPA spins up 50+ additional application pods within 60 seconds.",
+                "Low-priority background workers are paused; core user checkout/read workflows remain responsive."
+        ));
+        resp.setFailureModes(failureModes);
+
+        List<AiExplainResponse.InterviewerQuestionItem> questions = new ArrayList<>();
+        questions.add(new AiExplainResponse.InterviewerQuestionItem(
+                "How do you handle a Cache Stampede / Thundering Herd problem when a hot key expires?",
+                "Testing concurrency synchronization, distributed locking, and probabilistic early expiration.",
+                "We implement three lines of defense: 1) Add random jitter (+/- 10%) to TTL values so hot keys don't expire simultaneously; 2) Use Redis distributed locks (Redlock) so only the first thread that discovers a miss rebuilds the cache, while other threads wait or serve stale data; 3) Employ the XFetch probabilistic early expiration algorithm to refresh hot keys in the background before they expire."
+        ));
+        questions.add(new AiExplainResponse.InterviewerQuestionItem(
+                "What happens if there is replication lag between the primary database and read replicas?",
+                "Testing understanding of monotonic read consistency and read-your-own-writes guarantees.",
+                "Under high write load, asynchronous replication lag can reach 100-300ms. To maintain a seamless user experience, we implement 'Read-Your-Own-Writes' consistency: when a user updates their profile or creates an order, we route their subsequent reads to the primary database for the next 5 seconds (tracked via cookie or Redis timestamp), while all other users continue reading from read replicas."
+        ));
+        questions.add(new AiExplainResponse.InterviewerQuestionItem(
+                "How do you guarantee that a database write and a Kafka event publish succeed atomically?",
+                "Testing distributed transaction avoidance, dual-write vulnerabilities, and messaging patterns.",
+                "We avoid dual-write bugs and two-phase commit (2PC) overhead by implementing the Transactional Outbox pattern. Within the exact same ACID database transaction as the business entity, we insert the event into an 'outbox' database table. A Change Data Capture (CDC) tool like Debezium or an asynchronous polling worker reads the PostgreSQL WAL log and reliably streams the events to Kafka with at-least-once delivery guarantees."
+        ));
+        questions.add(new AiExplainResponse.InterviewerQuestionItem(
+                "Why did you choose Kafka instead of RabbitMQ for event processing here?",
+                "Testing knowledge of message broker architectures, log-centric vs queue-centric designs.",
+                "Kafka is an immutable partitioned append-only commit log designed for high throughput (millions of msgs/sec) and event replayability. RabbitMQ is a complex broker with transient queues where messages disappear once acknowledged. Since we need multiple distinct consumer groups (notifications, search indexing, fraud analysis) to read the same stream independently at their own pace, Kafka's consumer group offset model is the ideal architectural fit."
+        ));
+        questions.add(new AiExplainResponse.InterviewerQuestionItem(
+                "How does this system guarantee idempotency on payment or state mutation requests?",
+                "Testing duplicate request handling, network retries, and database uniqueness constraints.",
+                "Every client mutation request generates a unique UUID `Idempotency-Key` sent in the HTTP header. The API Gateway / service checks Redis with `SETNX idempotency:{key} PROCESSING EX 120`. If the key exists, subsequent duplicate retries receive the cached response or an HTTP 409 Conflict. Once the database transaction commits, the key is updated with the final response payload, ensuring exactly-once execution semantics even under network timeouts and retries."
+        ));
+        resp.setInterviewerQuestions(questions);
+
+        resp.setFullPresentationScript(String.format(
+                "=== SYSTEM DESIGN INTERVIEW PRESENTATION SCRIPT ===\n\n" +
+                "1. EXECUTIVE OVERVIEW (0:00 - 1:00):\n" +
+                "\"Hi, today I'll be presenting the system architecture for %s. Our target scale is %s with sub-25ms p99 latency and high availability. " +
+                "The core design philosophy is strict separation of concerns between our ingress layer, stateless compute, and layered storage, ensuring that transient spikes do not cascade into database outages.\"\n\n" +
+                "2. REQUEST LIFECYCLE (1:00 - 3:00):\n" +
+                "\"When a client initiates an action, Geo-DNS routes to our nearest CDN edge point of presence. For static assets and cached read queries, the CDN responds immediately. " +
+                "Dynamic requests pass through our Layer 7 API Gateway, where we enforce token-bucket rate limiting, terminate TLS, and validate JWT authorization claims. " +
+                "The request is dispatched via least-connections load balancing to our stateless microservices. " +
+                "Our services implement a Cache-Aside pattern with Redis: if the data is in cache, we return in under 2ms. On a cache miss, we read from PostgreSQL read replicas and populate the cache with a jittered TTL. " +
+                "For write operations, we commit an ACID transaction to our primary PostgreSQL node and simultaneously write an event to the Transactional Outbox table, which CDC streams asynchronously into Kafka for downstream workers.\"\n\n" +
+                "3. KEY TRADE-OFFS & FAULT TOLERANCE (3:00 - 4:30):\n" +
+                "\"We chose Cache-Aside over Write-Through because it is resilient to cache crashes—if Redis experiences shard failover, our services degrade gracefully with circuit breakers rather than dropping writes. " +
+                "For storage, we chose PostgreSQL with read replicas over pure NoSQL because transactional consistency is critical, while Kafka gives us the horizontal event streaming capacity we need. " +
+                "If our primary database fails, multi-AZ automated failover promotes a standby replica in under 20 seconds with zero data loss.\"\n\n" +
+                "4. CONCLUSION & TRANSITION (4:30 - 5:00):\n" +
+                "\"This completes the high-level architecture walkthrough. I'm happy to dive deeper into any specific area—such as partition keys, cache invalidation, or failure recovery mechanisms. Where would you like to explore first?\"",
+                title, scale
+        ));
+
+        return resp;
+    }
+
     private AiAuditResponse generateRuleBasedAudit(AiAuditRequest request) {
         AiAuditResponse audit = new AiAuditResponse();
         audit.setHealthScore(88);

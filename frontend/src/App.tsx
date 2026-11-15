@@ -28,12 +28,14 @@ import {
   Network, 
   Calculator, 
   BarChart3, 
-  HelpCircle,
-  Sparkles,
-  ShieldCheck,
-  User,
-  LogOut,
-  Search
+  HelpCircle, 
+  Sparkles, 
+  ShieldCheck, 
+  User, 
+  LogOut, 
+  Search,
+  Menu,
+  X
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
@@ -103,22 +105,23 @@ export const App: React.FC = () => {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [searchOpen, setSearchOpen] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col bg-[#0B1020] text-[#F8FAFC]">
         {/* Top Navigation */}
-        <header className="h-16 border-b border-[#1E293B] bg-[#151C2E]/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-50">
+        <header className="h-16 border-b border-[#1E293B] bg-[#151C2E]/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#6366F1] to-[#06B6D4] flex items-center justify-center font-bold text-white shadow-lg shadow-[#6366F1]/20">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 sm:gap-3">
+              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-[#6366F1] to-[#06B6D4] flex items-center justify-center font-bold text-white shadow-lg shadow-[#6366F1]/20">
                 <Bot className="w-5 h-5" />
               </div>
               <div>
-                <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-[#A78BFA] bg-clip-text text-transparent">
+                <span className="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-[#A78BFA] bg-clip-text text-transparent">
                   System Design AI
                 </span>
-                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-[#6366F1]/20 text-[#A78BFA] border border-[#6366F1]/30 font-medium">
+                <span className="ml-1.5 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full bg-[#6366F1]/20 text-[#A78BFA] border border-[#6366F1]/30 font-medium">
                   v1.0 Pro
                 </span>
               </div>
@@ -155,26 +158,26 @@ export const App: React.FC = () => {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setSearchOpen(true)}
-              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-xs text-slate-400 hover:text-white transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-xs text-slate-400 hover:text-white transition-all cursor-pointer"
               title="Search System Design Topics (Cmd+K)"
             >
               <Search className="w-3.5 h-3.5 text-[#06B6D4]" />
-              <span>Search & Ask AI...</span>
-              <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-[#0B1020] text-slate-400 font-mono border border-[#334155]">⌘K</kbd>
+              <span className="hidden sm:inline">Search & Ask AI...</span>
+              <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-[#0B1020] text-slate-400 font-mono border border-[#334155]">⌘K</kbd>
             </button>
 
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-3">
-                <Link to="/profile" className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-sm text-white transition-all">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Link to="/profile" className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-xs sm:text-sm text-white transition-all">
                   <User className="w-4 h-4 text-[#A78BFA]" />
-                  <span className="font-medium text-xs">{user.fullName}</span>
+                  <span className="font-medium text-xs hidden sm:inline">{user.fullName}</span>
                 </Link>
                 <button
                   onClick={() => dispatch(logout())}
-                  className="p-2 text-slate-400 hover:text-white transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-white transition-colors"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
@@ -182,16 +185,51 @@ export const App: React.FC = () => {
               </div>
             ) : (
               <>
-                <Link to="/login" className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                <Link to="/login" className="px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors">
                   Sign In
                 </Link>
-                <Link to="/register" className="px-4 py-2 text-sm font-medium rounded-lg bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-[#6366F1]/25 transition-all">
+                <Link to="/register" className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-[#6366F1]/25 transition-all">
                   Get Started
                 </Link>
               </>
             )}
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-xl bg-[#1E293B] hover:bg-[#334155] text-slate-300 transition-colors"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </header>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#151C2E] border-b border-[#1E293B] px-4 py-3 space-y-1 z-40 animate-in slide-in-from-top-2">
+            {[
+              { to: '/dashboard', label: 'Dashboard' },
+              { to: '/curriculum', label: 'Curriculum' },
+              { to: '/hld', label: 'HLD Practice' },
+              { to: '/lld', label: 'LLD Practice' },
+              { to: '/interview', label: 'AI Interview' },
+              { to: '/designer', label: 'Architecture Designer' },
+              { to: '/simulators', label: '18 Distributed Simulators' },
+              { to: '/questions', label: 'Question Bank' },
+              { to: '/admin', label: 'Admin & Monetization' }
+            ].map((link, idx) => (
+              <Link
+                key={idx}
+                to={link.to}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Dynamic Route View */}
         <Routes>

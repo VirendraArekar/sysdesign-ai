@@ -12,7 +12,9 @@ import {
   Smartphone, 
   ShieldCheck,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  Play
 } from 'lucide-react';
 
 export interface ArchitectureNodeData {
@@ -23,6 +25,10 @@ export interface ArchitectureNodeData {
   replicas?: string;
   notes?: string;
   hasSpof?: boolean;
+  isSimulatingTraffic?: boolean;
+  isActiveWalkthrough?: boolean;
+  stepBadge?: number;
+  latency?: string;
 }
 
 const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string; icon: React.ElementType }> = {
@@ -43,12 +49,35 @@ export const ArchitectureNode: React.FC<NodeProps> = ({ data, selected }) => {
   const style = CATEGORY_STYLES[category] || CATEGORY_STYLES.compute;
   const IconComponent = style.icon;
 
+  const isWalkthrough = nodeData.isActiveWalkthrough;
+  const isTraffic = nodeData.isSimulatingTraffic;
+
   return (
     <div className={`relative px-4 py-3 rounded-xl min-w-[210px] bg-[#151C2E] border-2 transition-all shadow-xl backdrop-blur-md ${
-      selected 
-        ? 'border-[#6366F1] shadow-[#6366F1]/25 ring-2 ring-[#6366F1]/30' 
-        : `${style.border} hover:border-slate-500`
+      isWalkthrough
+        ? 'border-amber-400 shadow-2xl shadow-amber-400/50 ring-4 ring-amber-400/60 scale-105 z-30'
+        : selected 
+          ? 'border-[#6366F1] shadow-[#6366F1]/25 ring-2 ring-[#6366F1]/30' 
+          : isTraffic
+            ? 'border-cyan-400/80 shadow-lg shadow-cyan-400/25 ring-2 ring-cyan-400/30'
+            : `${style.border} hover:border-slate-500`
     }`}>
+      {/* Walkthrough Step Badge */}
+      {isWalkthrough && nodeData.stepBadge && (
+        <div className="absolute -top-3.5 -right-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[11px] shadow-lg flex items-center gap-1 animate-bounce">
+          <Play className="w-2.5 h-2.5 fill-current" />
+          <span>Step {nodeData.stepBadge}</span>
+        </div>
+      )}
+
+      {/* Traffic Pulse Badge */}
+      {isTraffic && !isWalkthrough && (
+        <div className="absolute -top-2.5 -right-2 px-1.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 font-mono text-[9px] flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+          <span>Active</span>
+        </div>
+      )}
+
       {/* React Flow Handles */}
       <Handle 
         type="target" 
@@ -106,12 +135,19 @@ export const ArchitectureNode: React.FC<NodeProps> = ({ data, selected }) => {
       </div>
 
       {/* Metrics Footer */}
-      {(nodeData.qps || nodeData.replicas) && (
+      {(nodeData.qps || nodeData.replicas || isTraffic) && (
         <div className="flex items-center justify-between gap-1.5 mt-2.5 pt-2 border-t border-[#1E293B]/70 text-[10px] text-slate-300">
-          {nodeData.qps && (
-            <span className="px-1.5 py-0.5 rounded bg-[#1E293B] font-mono text-[#06B6D4]">
-              {nodeData.qps}
+          {isTraffic ? (
+            <span className="px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 font-mono text-cyan-300 flex items-center gap-1">
+              <Zap className="w-2.5 h-2.5 text-cyan-400" />
+              {nodeData.qps || '35k QPS'}
             </span>
+          ) : (
+            nodeData.qps && (
+              <span className="px-1.5 py-0.5 rounded bg-[#1E293B] font-mono text-[#06B6D4]">
+                {nodeData.qps}
+              </span>
+            )
           )}
           {nodeData.replicas && (
             <span className="px-1.5 py-0.5 rounded bg-[#1E293B] font-mono text-[#A78BFA]">
