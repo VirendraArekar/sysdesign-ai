@@ -54,6 +54,9 @@ public class SecurityConfig {
                 // Public content endpoints
                 .requestMatchers(HttpMethod.GET, "/api/v1/curriculum/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/practice/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/architecture/templates").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/architecture/audit").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/architecture/generate").permitAll()
                 .requestMatchers("/api/v1/simulators/**").permitAll()
                 // Admin endpoints
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

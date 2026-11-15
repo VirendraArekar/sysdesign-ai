@@ -15,6 +15,7 @@ import LldDetailPage from './pages/practice/LldDetailPage';
 import QuestionBankPage from './pages/practice/QuestionBankPage';
 import InterviewPage from './pages/interview/InterviewPage';
 import InterviewHistoryPage from './pages/interview/InterviewHistoryPage';
+import ArchitectureDesignerPage from './pages/designer/ArchitectureDesignerPage';
 import { 
   BookOpen, 
   Layers, 
@@ -188,6 +189,7 @@ export const App: React.FC = () => {
           <Route path="/questions" element={<QuestionBankPage />} />
           <Route path="/interview" element={<InterviewPage />} />
           <Route path="/interview/history" element={<InterviewHistoryPage />} />
+          <Route path="/designer" element={<ArchitectureDesignerPage />} />
         </Routes>
 
         {/* Footer */}
