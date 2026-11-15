@@ -3,12 +3,14 @@ package com.sysdesign.modules.curriculum.service;
 import com.sysdesign.modules.curriculum.model.*;
 import com.sysdesign.modules.curriculum.repository.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Profile("!test")
 public class CurriculumSeedService implements CommandLineRunner {
 
     private final LearningModuleRepository moduleRepository;

@@ -8,6 +8,11 @@ import RegisterPage from './pages/auth/RegisterPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import CurriculumListPage from './pages/curriculum/CurriculumListPage';
 import TopicDetailPage from './pages/curriculum/TopicDetailPage';
+import HldListPage from './pages/practice/HldListPage';
+import HldDetailPage from './pages/practice/HldDetailPage';
+import LldListPage from './pages/practice/LldListPage';
+import LldDetailPage from './pages/practice/LldDetailPage';
+import QuestionBankPage from './pages/practice/QuestionBankPage';
 import { 
   BookOpen, 
   Layers, 
@@ -133,6 +138,9 @@ export const App: React.FC = () => {
             <Link to="/simulators" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
               Simulators
             </Link>
+            <Link to="/questions" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
+              Questions
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -171,6 +179,11 @@ export const App: React.FC = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/curriculum" element={<CurriculumListPage />} />
           <Route path="/curriculum/topic/:topicId" element={<TopicDetailPage />} />
+          <Route path="/hld" element={<HldListPage />} />
+          <Route path="/hld/:id" element={<HldDetailPage />} />
+          <Route path="/lld" element={<LldListPage />} />
+          <Route path="/lld/:id" element={<LldDetailPage />} />
+          <Route path="/questions" element={<QuestionBankPage />} />
         </Routes>
 
         {/* Footer */}

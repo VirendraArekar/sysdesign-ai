@@ -24,7 +24,7 @@ public class UserProfile extends BaseEntity {
     @Column(name = "experience_years")
     private Integer experienceYears = 3;
 
-    @Column(name = "target_companies", columnDefinition = "text[]")
+    @Column(name = "target_companies")
     private String[] targetCompanies = new String[]{"Google", "Amazon", "Meta", "Netflix", "Uber"};
 
     @Column(name = "preferred_level", length = 50)
