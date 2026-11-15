@@ -17,6 +17,7 @@ import InterviewPage from './pages/interview/InterviewPage';
 import InterviewHistoryPage from './pages/interview/InterviewHistoryPage';
 import ArchitectureDesignerPage from './pages/designer/ArchitectureDesignerPage';
 import SimulatorsHubPage from './pages/simulators/SimulatorsHubPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
 import { 
   BookOpen, 
   Layers, 
@@ -121,7 +122,7 @@ export const App: React.FC = () => {
           </div>
 
           <nav className="hidden md:flex items-center gap-1">
-            <Link to="/" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
+            <Link to="/dashboard" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
               Dashboard
             </Link>
             <Link to="/curriculum" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
@@ -177,7 +178,8 @@ export const App: React.FC = () => {
 
         {/* Dynamic Route View */}
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={isAuthenticated ? <DashboardPage /> : <LandingPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
