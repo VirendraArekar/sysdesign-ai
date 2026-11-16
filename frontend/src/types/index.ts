@@ -67,9 +67,13 @@ export interface TopicHubDetail {
   category: string;
   difficulty: string;
   description: string;
+  hldPoints?: string[];
   systemDesignDiagram: string;
+  hldExplanation?: string;
+  lldPoints?: string[];
   umlClassDiagram: string;
   umlSequenceDiagram: string;
+  lldExplanation?: string;
   codeOptions: CodeOptions;
   workingSteps: WorkingStep[];
   relatedAnswers: RelatedAnswer[];

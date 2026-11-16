@@ -253,3 +253,41 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 - **Frontend**: `frontend/src/App.tsx`, `frontend/src/components/common/MermaidViewer.tsx`, `frontend/src/pages/admin/AdminDashboardPage.tsx`, `frontend/src/pages/auth/LoginPage.tsx`, `frontend/src/pages/auth/RegisterPage.tsx`, `frontend/src/pages/curriculum/CurriculumListPage.tsx`, `frontend/src/pages/curriculum/TopicDetailPage.tsx`, `frontend/src/pages/dashboard/DashboardPage.tsx`, `frontend/src/pages/interview/InterviewHistoryPage.tsx`, `frontend/src/pages/interview/InterviewPage.tsx`, `frontend/src/pages/practice/HldDetailPage.tsx`, `frontend/src/pages/practice/HldListPage.tsx`, `frontend/src/pages/practice/LldDetailPage.tsx`, `frontend/src/pages/practice/LldListPage.tsx`, `frontend/src/pages/practice/QuestionBankPage.tsx`, `frontend/src/pages/profile/ProfilePage.tsx`, `frontend/src/pages/simulators/SimulatorsHubPage.tsx`.
 - **Commit**: `5524fe4` (pushed to `origin main`).
 - **Status**: COMPLETED
+
+### Phase 21: Unified System Design Topics with Integrated HLD & LLD Points, Diagrams, Code & Explanations
+- **Scope & User Intent**:
+  - The user requested: *"ALSO HLD and LLD not like that, its like sytem design topic and if clicked it show LLD and HLD point also digram and explaination"*.
+  - Eliminated the artificial segregation that treated system design problems as mutually exclusive HLD vs LLD silos.
+  - Re-architected `/topics` so each system design problem (e.g. *Parking Lot System*, *API Rate Limiter*, *Elevator Control*, *WhatsApp Real-Time Chat*, *URL Shortener TinyURL*) is treated as a unified System Design Topic providing both **High-Level Design (HLD)** and **Low-Level Design (LLD)** perspectives.
+- **Architectural Implementation**:
+  1. **Backend Integration (`backend/src/main/java/com/sysdesign/modules/practice/dto/TopicHubDetailDto.java`)**:
+     - Added dedicated fields `List<String> hldPoints`, `String hldExplanation`, `List<String> lldPoints`, and `String lldExplanation` to `TopicHubDetailDto`.
+     - Preserved backward compatibility with an overloaded constructor supplying comprehensive default HLD architectural pillars (Throughput & SLA, stateless microservices, distributed Redis caching, DB partitioning/sharding, SPOF elimination) and LLD OOP pillars (SOLID adherence, Strategy/Factory/Observer patterns, thread safety with atomic CAS/ReentrantLock, extensible domain interfaces).
+     - Validated with Maven unit tests: 5/5 passing in `PracticeServiceTest`.
+  2. **Frontend Type System (`frontend/src/types/index.ts`)**:
+     - Updated `TopicHubDetail` interface with `hldPoints?: string[]`, `hldExplanation?: string`, `lldPoints?: string[]`, and `lldExplanation?: string`.
+  3. **Frontend Unified Topic Explorer (`frontend/src/pages/topics/TopicsExplorerPage.tsx`)**:
+     - **Defensive API Extraction**: Resolved the `res.data.data` unwrap issue by extracting `Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : (res?.data?.data || []))`.
+     - **Unified Topic Catalog**: Each topic card displays dual `HLD` and `LLD` capability pills, difficulty, category, and single-click exploration trigger.
+     - **4 Specialized Perspective Views**:
+       - **🏢 High-Level Design (HLD)**:
+         - *HLD Architecture Points*: High Throughput & Low Latency SLA, Stateless Application Fleet, Distributed Multi-Tier Caching, Database Partitioning, Fault Tolerance.
+         - *Interactive HLD Topology*: Mermaid flowchart diagram of end-to-end cloud infrastructure (Client &rarr; CDN &rarr; ALB &rarr; Microservices &rarr; Redis Cache &rarr; Sharded Database).
+         - *HLD Request Flow*: Step-by-step walkthrough explaining protocols, cache-aside lookups, and latency metrics.
+         - *Trade-Offs & CAP Analysis*: In-depth analysis of consistency vs availability and sharding key strategies.
+       - **⚙️ Low-Level Design (LLD)**:
+         - *LLD / OOP Points*: SOLID principles (SRP, OCP, LSP, ISP, DIP), design patterns (Strategy, Factory, Observer, State), thread-safety locks (Atomic primitives, ReentrantLock, ConcurrentHashMap), and extensible domain models.
+         - *Interactive UML Diagrams*: Sub-toggle between Mermaid UML Class Diagram and Sequence Diagram.
+         - *Production Multi-Language Code*: Syntax-highlighted code editor supporting Java 25, Python 3, C++ 20, and Go with one-click copy.
+         - *Component Lifecycle & Concurrency Patterns*: Explanation of thread safety and class orchestration.
+       - **⚡ Compare HLD & LLD (Side-by-Side)**:
+         - Simultaneous 2-column comparative layout showing High-Level Architecture (flowchart & SLA points) on the left, and Low-Level Architecture (UML diagram & working code) on the right.
+       - **🎯 Interviewer Q&A**:
+         - 45-minute interviewer timeline breakdown (Scope, HLD, LLD & UML, Bottlenecks) plus top FAANG follow-up questions, interviewer intent, and model answers.
+  4. **Verification & Live Container Deployment**:
+     - Rebuilt frontend and backend Docker containers (`sysdesign-frontend` on port 3000, `sysdesign-backend` on port 8082).
+     - Verified backend REST endpoints `/api/v1/practice/topics-hub` and `/api/v1/practice/topics-hub/{topicId}` returning complete HLD and LLD payloads.
+     - Live automated CDP verification captured high-resolution screenshots for HLD View, LLD View, Side-by-Side Comparison, and Dark Mode.
+- **Backend**: `backend/src/main/java/com/sysdesign/modules/practice/dto/TopicHubDetailDto.java`.
+- **Frontend**: `frontend/src/types/index.ts`, `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
+- **Status**: COMPLETED
