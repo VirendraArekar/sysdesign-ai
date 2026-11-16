@@ -222,16 +222,18 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [activeTab, setActiveTab] = useState<'inspector' | 'audit' | 'generate' | 'walkthrough' | 'explain'>('audit');
 
-  // Responsive Drawer Visibility
-  const [showLibrary, setShowLibrary] = useState(false);
-  const [showDrawer, setShowDrawer] = useState(false);
+  // Responsive Drawer Visibility - Enabled by default
+  const [showLibrary, setShowLibrary] = useState(true);
+  const [showDrawer, setShowDrawer] = useState(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-open library on desktop on mount
-  useEffect(() => {
-    if (window.innerWidth >= 1024) {
-      setShowLibrary(true);
-      setShowDrawer(true);
-    }
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastMessage(msg);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
   }, []);
 
   // Diagram metadata
@@ -271,9 +273,15 @@ const ArchitectureDesignerCanvas: React.FC = () => {
 
   const fetchTemplates = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/architecture/templates`);
-      if (res.data?.data) {
-        setTemplates(res.data.data);
+      const [resTemplates, resComponents] = await Promise.allSettled([
+        axios.get(`${API_BASE}/architecture/templates`),
+        axios.get(`${API_BASE}/architecture/components`)
+      ]);
+      if (resTemplates.status === 'fulfilled' && resTemplates.value.data?.data) {
+        setTemplates(resTemplates.value.data.data);
+      }
+      if (resComponents.status === 'fulfilled' && resComponents.value.data?.data) {
+        console.info('Backend components catalog synced successfully:', resComponents.value.data.data.length);
       }
     } catch (err) {
       console.warn('Failed to load templates from backend', err);
@@ -524,68 +532,131 @@ const ArchitectureDesignerCanvas: React.FC = () => {
         console.warn('screenToFlowPosition error fallback', err);
       }
 
-      const id = `${category}-${Date.now()}`;
+      const cat = category || 'compute';
+      const def = COMPONENT_DEFINITIONS[cat] || { label: label || 'Component', tech: tech || '' };
+      const finalLabel = label || def.label;
+      const finalTech = tech || def.tech;
+
+      const id = `${cat}-${Date.now()}`;
       const newNode: Node = {
         id,
         type: 'archNode',
         position: { x: posX, y: posY },
+        selected: true,
         data: {
-          label: label || 'Component',
-          category,
-          techStack: tech || '',
+          label: finalLabel,
+          category: cat,
+          techStack: finalTech,
           qps: '15k QPS',
           replicas: '3 Replicas',
           isSimulatingTraffic
         }
       };
 
-      setNodes((nds) => [...nds, newNode]);
+      setNodes((nds) => [
+        ...nds.map((n) => ({ ...n, selected: false })),
+        newNode
+      ]);
       setSelectedNode(newNode);
       setActiveTab('inspector');
       setShowDrawer(true);
+      showToast(`✓ Placed ${finalLabel} at (${Math.round(posX)}, ${Math.round(posY)})`);
 
       isDraggingRef.current = false;
       (window as any).__DRAGGED_ARCH_NODE__ = null;
       globalDraggedNode = null;
+
+      // Validate node asynchronously with backend
+      axios.post(`${API_BASE}/architecture/node/validate`, {
+        category: cat,
+        label: finalLabel,
+        techStack: finalTech,
+        qps: '15k QPS',
+        replicas: '3 Replicas'
+      }).then((res) => {
+        if (res.data?.data?.resilienceTip) {
+          setNodes((nds) =>
+            nds.map((n) =>
+              n.id === id
+                ? {
+                    ...n,
+                    data: {
+                      ...(n.data as unknown as ArchitectureNodeData),
+                      notes: res.data.data.resilienceTip
+                    }
+                  }
+                : n
+            )
+          );
+        }
+      }).catch(() => {});
     },
-    [screenToFlowPosition, setNodes, isSimulatingTraffic]
+    [screenToFlowPosition, setNodes, isSimulatingTraffic, showToast]
   );
 
   // Click / Tap to Add (Guaranteed reliable on mobile/tablets and desktop)
   const addNode = (category: ArchitectureNodeData['category'], defaultLabel: string, defaultTech: string) => {
-    const wrapperBounds = reactFlowWrapper.current?.getBoundingClientRect();
-    let posX = 350;
-    let posY = 200;
+    const cat = category || 'compute';
+    const def = COMPONENT_DEFINITIONS[cat] || { label: defaultLabel, tech: defaultTech };
+    const finalLabel = defaultLabel || def.label;
+    const finalTech = defaultTech || def.tech;
 
-    if (wrapperBounds) {
-      const centerPos = screenToFlowPosition({
-        x: wrapperBounds.left + wrapperBounds.width / 2 + (Math.random() - 0.5) * 80,
-        y: wrapperBounds.top + wrapperBounds.height / 2 + (Math.random() - 0.5) * 80
-      });
-      if (centerPos && typeof centerPos.x === 'number' && !isNaN(centerPos.x)) {
-        posX = centerPos.x;
-        posY = centerPos.y;
-      }
-    }
+    // Calculate smart staggered position in Row 2 so nodes never overlap existing Row 1 nodes
+    const offsetIndex = Math.max(0, nodes.length - 6);
+    const col = offsetIndex % 4;
+    const row = Math.floor(offsetIndex / 4);
+    const posX = 80 + col * 260;
+    const posY = 360 + row * 160;
 
-    const id = `${category}-${Date.now()}`;
+    const id = `${cat}-${Date.now()}`;
     const newNode: Node = {
       id,
       type: 'archNode',
       position: { x: posX, y: posY },
+      selected: true,
       data: {
-        label: defaultLabel,
-        category,
-        techStack: defaultTech,
+        label: finalLabel,
+        category: cat,
+        techStack: finalTech,
         qps: '15k QPS',
         replicas: '3 Replicas',
         isSimulatingTraffic
       }
     };
-    setNodes((nds) => [...nds, newNode]);
+
+    setNodes((nds) => [
+      ...nds.map((n) => ({ ...n, selected: false })),
+      newNode
+    ]);
     setSelectedNode(newNode);
     setActiveTab('inspector');
     setShowDrawer(true);
+    showToast(`✓ Added ${finalLabel} to canvas (${nodes.length + 1} total components)`);
+
+    // Validate node asynchronously with backend
+    axios.post(`${API_BASE}/architecture/node/validate`, {
+      category: cat,
+      label: finalLabel,
+      techStack: finalTech,
+      qps: '15k QPS',
+      replicas: '3 Replicas'
+    }).then((res) => {
+      if (res.data?.data?.resilienceTip) {
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  data: {
+                    ...(n.data as unknown as ArchitectureNodeData),
+                    notes: res.data.data.resilienceTip
+                  }
+                }
+              : n
+          )
+        );
+      }
+    }).catch(() => {});
   };
 
   // Update selected node data
@@ -940,17 +1011,6 @@ const ArchitectureDesignerCanvas: React.FC = () => {
 
       {/* Main Workspace: Left Palette + Canvas + Right Inspector/Audit Drawer */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Mobile Backdrop Overlay for Drawers */}
-        {(showLibrary || showDrawer) && (
-          <div
-            onClick={() => {
-              setShowLibrary(false);
-              setShowDrawer(false);
-            }}
-            className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-xs transition-opacity"
-          />
-        )}
-
         {/* Left Component Tray (Responsive Drawer) */}
         {showLibrary && (
           <aside className="w-72 lg:w-64 border-r border-slate-200 dark:border-[#1E293B] bg-slate-50 dark:bg-[#151C2E] p-3 flex flex-col gap-2 overflow-y-auto z-40 fixed lg:relative inset-y-0 left-0 h-full shadow-2xl lg:shadow-none">
@@ -1040,6 +1100,13 @@ const ArchitectureDesignerCanvas: React.FC = () => {
           onDragEnter={onDragEnter}
           onDrop={onDrop}
         >
+          {/* Real-time Action Notification Toast */}
+          {toastMessage && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl bg-indigo-600/95 dark:bg-indigo-500/95 text-white text-xs font-semibold shadow-2xl backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2 pointer-events-none">
+              <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
+              <span>{toastMessage}</span>
+            </div>
+          )}
           <ReactFlow
             nodes={nodes}
             edges={edges}

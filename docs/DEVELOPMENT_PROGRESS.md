@@ -27,6 +27,8 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 13** | Comprehensive Testing Suite, Security Hardening & Optimizations | COMPLETED | COMPLETED | COMPLETED | COMPLETED | ffbb104 | SUCCESS |
 | **Phase 14** | DevOps, Docker Compose, CI/CD, Monitoring & Production Deployment | COMPLETED | COMPLETED | COMPLETED | COMPLETED | ffbb104 | SUCCESS |
 | **Phase 15** | System Design Topics Explorer (HLD/LLD Segregation, Multi-Lang Code, UML & Q&A) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | af81984 | SUCCESS |
+| **Phase 16** | Architecture Designer Drag-and-Drop Fix, Theme Switcher & Responsiveness | COMPLETED | COMPLETED | COMPLETED | COMPLETED | d34ab88 | SUCCESS |
+| **Phase 17** | Designer End-to-End Drag & Drop Fix, Backend Component Catalog & Validation, Cache Busting | COMPLETED | COMPLETED | COMPLETED | COMPLETED | PENDING | PENDING |
 
 ---
 
@@ -142,4 +144,26 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 - **Frontend**: `frontend/src/context/ThemeContext.tsx`, `frontend/src/index.css`, `frontend/src/main.tsx`, `frontend/src/App.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.tsx`, `frontend/src/pages/designer/ArchitectureNode.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.test.ts`, `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
 - **Tests**: Vitest tests passing (3/3 tests in `App.test.tsx` and `ArchitectureDesignerPage.test.ts`); Vite production build passing (`npm run build` exit code 0); all 30 backend tests passing (`mvn test` exit code 0); Docker container rebuilt and healthy on port 3000.
 - **Commit**: `d34ab88` (pushed to `origin main`).
+- **Status**: COMPLETED
+
+### Phase 17: Architecture Designer End-to-End Drag & Drop Resolution, Backend Catalog & Validation APIs, Modal Overlay Removal, and Nginx Cache Busting
+- **Scope**:
+  1. **Root Cause Analysis & Complete Drag & Drop + Add Button Fix**:
+     - **Canvas Staggered Placement**: In previous versions, newly added nodes via `+ Add` button or library tap defaulted to fixed coordinates `(350, 200)`. In `INITIAL_NODES`, the `cdn-1` component is positioned at `(300, 180)` with width 210px. As a result, newly added components were placed directly underneath `cdn-1`, creating an optical illusion that the `+ Add` button was unresponsive. Fixed by calculating dynamic non-overlapping Row 2 coordinates (`posX = 80 + (count % 3) * 260`, `posY = 360 + Math.floor(count / 3) * 160`) so every added node is instantly visible and positioned cleanly on the canvas.
+     - **Screen-Blocking Modal Backdrop Removal**: Removed `(showLibrary || showDrawer) && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" />` overlay which was intercepting mouse pointer events, drags, and clicks on screens < 1024px (e.g. laptops with DevTools open or tablets).
+     - **Auto-Selection on Canvas**: When a node is dropped or added, it is automatically focused and highlighted with purple focus ring (`selected: true`) while deselecting previous nodes.
+     - **Real-Time Toast Feedback**: Added floating animated toast banner (`✓ Added [Component Name] to canvas ([N] components)`) providing instant tactile confirmation upon click or drag-and-drop.
+     - **Component Catalog Synchronization**: Top navigation bar dynamically updates the active node count and edge count.
+  2. **Backend Architecture Catalog & Node Topology Validation APIs**:
+     - **Component Catalog API (`GET /api/v1/architecture/components`)**: Created `ComponentDefinitionDto` returning 9 core system design components (`client`, `cdn`, `security`, `load_balancer`, `compute`, `cache`, `messaging`, `database`, `storage`) with production metadata (tech stack recommendations, default QPS, default replicas, UI theme colors, descriptions).
+     - **Node Validation API (`POST /api/v1/architecture/node/validate`)**: Created `NodeValidationRequest` and `NodeValidationResponse`. Validates single node topologies and provides automated resilience tips, recommended replicas, and potential architectural risks based on component category.
+     - **Spring Security Configuration**: Explicitly permitted `/api/v1/architecture/components` and `/api/v1/architecture/node/validate` in `SecurityConfig.java`.
+     - **Frontend-Backend Integration**: Frontend queries `/api/v1/architecture/components` on startup, falling back seamlessly to client-side catalog if backend is unavailable. On drop/add, asynchronously queries `/api/v1/architecture/node/validate` to enrich node state with backend architectural validation tips.
+  3. **Nginx Cache Busting & Fresh Asset Delivery**:
+     - Configured `docker/nginx.conf` with `add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;` and `expires -1;` for `location /` so browsers never serve stale cached versions of `index.html`.
+  4. **Automated Testing Suite**:
+     - Backend: 2 new unit tests in `ArchitectureServiceTest.java` (`testGetComponentsCatalog` and `testValidateNode`) — all 32 backend tests passing (`mvn test`).
+     - Frontend: Component test `ArchitectureDesignerPage.component.test.tsx` testing canvas rendering, `+ Add` button placement, and native HTML5 drag-and-drop events — all 5 frontend tests passing (`npm test`).
+- **Backend**: `ComponentDefinitionDto.java`, `NodeValidationRequest.java`, `NodeValidationResponse.java`, `ArchitectureService.java`, `ArchitectureController.java`, `SecurityConfig.java`, `ArchitectureServiceTest.java`.
+- **Frontend**: `ArchitectureDesignerPage.tsx`, `ArchitectureDesignerPage.component.test.tsx`, `vite.config.ts`, `docker/nginx.conf`.
 - **Status**: COMPLETED

@@ -105,4 +105,25 @@ class ArchitectureServiceTest {
         assertTrue(response.getCanvasData().contains("WebSocket"));
         assertTrue(response.getCanvasData().contains("Cassandra"));
     }
+
+    @Test
+    void testGetComponentsCatalog() {
+        List<ComponentDefinitionDto> catalog = architectureService.getComponentsCatalog();
+        assertNotNull(catalog);
+        assertEquals(9, catalog.size());
+        assertTrue(catalog.stream().anyMatch(c -> c.getCategory().equals("database")));
+        assertTrue(catalog.stream().anyMatch(c -> c.getCategory().equals("cache")));
+        assertTrue(catalog.stream().anyMatch(c -> c.getCategory().equals("messaging")));
+    }
+
+    @Test
+    void testValidateNode() {
+        NodeValidationRequest req = new NodeValidationRequest("database", "Primary Database", "PostgreSQL 16", "5k QPS", "1 Master + 2 Replicas");
+        NodeValidationResponse res = architectureService.validateNode(req);
+        assertNotNull(res);
+        assertTrue(res.isValid());
+        assertEquals("database", res.getCategory());
+        assertNotNull(res.getResilienceTip());
+        assertTrue(res.getResilienceTip().contains("Replicas"));
+    }
 }

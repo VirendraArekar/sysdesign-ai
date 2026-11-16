@@ -65,6 +65,20 @@ public class ArchitectureController {
         return ApiResponse.ok("Templates retrieved successfully", templates);
     }
 
+    @GetMapping("/components")
+    @Operation(summary = "Get official system design component definitions catalog")
+    public ApiResponse<List<ComponentDefinitionDto>> getComponentsCatalog() {
+        List<ComponentDefinitionDto> components = architectureService.getComponentsCatalog();
+        return ApiResponse.ok("Components catalog retrieved successfully", components);
+    }
+
+    @PostMapping("/node/validate")
+    @Operation(summary = "Validate canvas node configuration and get topology connection recommendations")
+    public ApiResponse<NodeValidationResponse> validateNode(@Valid @RequestBody NodeValidationRequest request) {
+        NodeValidationResponse response = architectureService.validateNode(request);
+        return ApiResponse.ok("Node validated successfully", response);
+    }
+
     @PostMapping("/audit")
     @Operation(summary = "Run AI architectural audit on canvas nodes & edges")
     public ApiResponse<AiAuditResponse> auditArchitecture(@Valid @RequestBody AiAuditRequest request) {

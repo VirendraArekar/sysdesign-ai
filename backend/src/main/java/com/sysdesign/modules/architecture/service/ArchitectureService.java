@@ -120,6 +120,52 @@ public class ArchitectureService {
         );
     }
 
+    public List<ComponentDefinitionDto> getComponentsCatalog() {
+        return List.of(
+                new ComponentDefinitionDto("client", "Web & Mobile Apps", "Clients", "React / Next.js / Swift", "#06B6D4", "50,000 QPS", "Global", "End-user client applications across web, iOS, and Android platforms."),
+                new ComponentDefinitionDto("cdn", "Edge CDN / Anycast", "CDN & Edge", "Cloudflare / CloudFront", "#6366F1", "50,000 QPS", "250+ PoPs", "Geographically distributed edge caching and anycast DNS routing."),
+                new ComponentDefinitionDto("security", "Web App Firewall", "WAF & Anti-DDoS", "Cloudflare WAF / AWS Shield", "#EF4444", "80,000 QPS", "Redundant", "L7 inspection, rate limiting, and DDoS mitigation perimeter."),
+                new ComponentDefinitionDto("load_balancer", "L7 Load Balancer", "Load Balancer", "Envoy / NGINX / ALB", "#8B5CF6", "30,000 QPS", "3 Replicas", "Reverse proxy distributing traffic across application worker pods."),
+                new ComponentDefinitionDto("compute", "Microservice Pod", "App Service", "Spring Boot 3.4 / Java 25", "#3B82F6", "25,000 QPS", "12 Pods", "Stateless application logic worker processing business workflows."),
+                new ComponentDefinitionDto("cache", "Redis Distributed Cache", "In-Memory Cache", "Redis 7.2 Cluster", "#10B981", "40,000 QPS", "6 Shards", "Sub-millisecond in-memory cache-aside key-value layer."),
+                new ComponentDefinitionDto("messaging", "Kafka Event Bus", "Message Queue", "Apache Kafka 3.7", "#F59E0B", "25,000 Msg/s", "5 Brokers", "Distributed commit log for asynchronous decoupling and event-driven architectures."),
+                new ComponentDefinitionDto("database", "Relational Database", "SQL Database", "PostgreSQL 16 Multi-AZ", "#F43F5E", "5,000 Write TPS", "1 Primary + 3 Replicas", "ACID compliant transactional database with WAL replication."),
+                new ComponentDefinitionDto("storage", "Object Storage", "S3 Blob Storage", "AWS S3 Multi-Region", "#F97316", "10,000 IOPS", "Multi-Region", "High-durability blob storage for media files, assets, and backups.")
+        );
+    }
+
+    public NodeValidationResponse validateNode(NodeValidationRequest request) {
+        String cat = request.getCategory() != null ? request.getCategory().toLowerCase() : "compute";
+        List<String> recommendedConns = switch (cat) {
+            case "client" -> List.of("Edge CDN / Anycast", "Web App Firewall", "L7 Load Balancer");
+            case "cdn" -> List.of("L7 Load Balancer", "Object Storage");
+            case "security" -> List.of("L7 Load Balancer");
+            case "load_balancer" -> List.of("Microservice Pod");
+            case "compute" -> List.of("Redis Distributed Cache", "Relational Database", "Kafka Event Bus");
+            case "cache" -> List.of("Relational Database");
+            case "messaging" -> List.of("Microservice Pod");
+            default -> List.of();
+        };
+
+        String resilienceTip = switch (cat) {
+            case "database" -> "Configure at least 2 Read Replicas and cross-AZ automated failover to avoid SPOF.";
+            case "cache" -> "Use consistent hashing and jittered TTLs to prevent cache stampedes.";
+            case "compute" -> "Keep worker pods stateless with Horizontal Pod Autoscaling (HPA) targeting 70% CPU.";
+            case "messaging" -> "Set replication factor >= 3 and min.insync.replicas=2 for high durability.";
+            case "load_balancer" -> "Deploy across multiple Availability Zones with active health checks.";
+            default -> "Ensure redundancy and health checks on all upstream and downstream connections.";
+        };
+
+        return new NodeValidationResponse(
+                true,
+                cat,
+                request.getLabel(),
+                request.getTechStack(),
+                recommendedConns,
+                resilienceTip
+        );
+    }
+
     public AiAuditResponse auditArchitecture(AiAuditRequest request) {
         String systemPrompt = """
                 You are a Principal Software Architect and Google Fellow reviewing a system design architecture diagram.
