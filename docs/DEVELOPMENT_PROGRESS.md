@@ -29,7 +29,7 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 15** | System Design Topics Explorer (HLD/LLD Segregation, Multi-Lang Code, UML & Q&A) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | af81984 | SUCCESS |
 | **Phase 16** | Architecture Designer Drag-and-Drop Fix, Theme Switcher & Responsiveness | COMPLETED | COMPLETED | COMPLETED | COMPLETED | d34ab88 | SUCCESS |
 | **Phase 17** | Designer End-to-End Drag & Drop Fix, Backend Component Catalog & Validation, Cache Busting | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 1a0128a | SUCCESS |
-| **Phase 18** | Architecture Canvas Flexbox Zero-Height Resolution, Camera Auto-Centering & Visible Node Rendering | COMPLETED | COMPLETED | COMPLETED | COMPLETED | PENDING | PENDING |
+| **Phase 18** | Architecture Canvas Flexbox Zero-Height Resolution, Camera Auto-Centering & Visible Node Rendering | COMPLETED | COMPLETED | COMPLETED | COMPLETED | fcc2e07 | SUCCESS |
 
 ---
 
@@ -188,4 +188,5 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
        - Clicking `+ Add` on Microservice Pod places 7th node at `top: 350px, left: 363px, width: 210px, height: 148px` right in the visible center.
        - Captured screenshot confirming full visibility.
 - **Frontend**: `frontend/src/App.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.component.test.tsx`.
+- **Commit**: `fcc2e07` (pushed to `origin main`).
 - **Status**: COMPLETED
