@@ -19,6 +19,7 @@ import ArchitectureDesignerPage from './pages/designer/ArchitectureDesignerPage'
 import SimulatorsHubPage from './pages/simulators/SimulatorsHubPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import TopicsExplorerPage from './pages/topics/TopicsExplorerPage';
 import SemanticSearchModal from './components/search/SemanticSearchModal';
 import { 
   BookOpen, 
@@ -65,8 +66,11 @@ const LandingPage: React.FC = () => {
           <Link to="/interview" className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#4F46E5] hover:opacity-95 text-white font-semibold shadow-lg shadow-[#6366F1]/30 flex items-center gap-2 transition-all">
             <Bot className="w-5 h-5" /> Start Mock Interview
           </Link>
+          <Link to="/topics" className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#06B6D4] to-[#0891B2] hover:opacity-95 text-black font-bold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all">
+            <Sparkles className="w-5 h-5" /> Topics Hub (HLD & LLD)
+          </Link>
           <Link to="/curriculum" className="px-6 py-3 rounded-xl bg-[#151C2E] hover:bg-[#1E293B] border border-[#334155] text-slate-200 font-semibold flex items-center gap-2 transition-all">
-            <BookOpen className="w-5 h-5 text-[#06B6D4]" /> Explore Curriculum
+            <BookOpen className="w-5 h-5 text-[#06B6D4]" /> Curriculum
           </Link>
         </div>
 
@@ -131,6 +135,10 @@ export const App: React.FC = () => {
           <nav className="hidden md:flex items-center gap-1">
             <Link to="/dashboard" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
               Dashboard
+            </Link>
+            <Link to="/topics" className="px-3 py-1.5 rounded-lg text-sm font-bold text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 hover:bg-cyan-900/50 transition-colors flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Topics (HLD/LLD)</span>
             </Link>
             <Link to="/curriculum" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-[#1E293B] transition-colors">
               Curriculum
@@ -210,6 +218,7 @@ export const App: React.FC = () => {
           <div className="md:hidden bg-[#151C2E] border-b border-[#1E293B] px-4 py-3 space-y-1 z-40 animate-in slide-in-from-top-2">
             {[
               { to: '/dashboard', label: 'Dashboard' },
+              { to: '/topics', label: 'Topics Hub (HLD/LLD)' },
               { to: '/curriculum', label: 'Curriculum' },
               { to: '/hld', label: 'HLD Practice' },
               { to: '/lld', label: 'LLD Practice' },
@@ -235,6 +244,7 @@ export const App: React.FC = () => {
         <Routes>
           <Route path="/" element={isAuthenticated ? <DashboardPage /> : <LandingPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/topics" element={<TopicsExplorerPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />

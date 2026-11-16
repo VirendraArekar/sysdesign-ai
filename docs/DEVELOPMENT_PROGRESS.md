@@ -26,6 +26,7 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 12** | Admin Dashboard, Monetization & AI Token Quotas | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 6b9e891 | SUCCESS |
 | **Phase 13** | Comprehensive Testing Suite, Security Hardening & Optimizations | COMPLETED | COMPLETED | COMPLETED | COMPLETED | ffbb104 | SUCCESS |
 | **Phase 14** | DevOps, Docker Compose, CI/CD, Monitoring & Production Deployment | COMPLETED | COMPLETED | COMPLETED | COMPLETED | ffbb104 | SUCCESS |
+| **Phase 15** | System Design Topics Explorer (HLD/LLD Segregation, Multi-Lang Code, UML & Q&A) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 11e7de7 | SUCCESS |
 
 ---
 
@@ -105,4 +106,16 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
   5. *Alpine Nginx IPv6 Healthcheck*: Added `listen [::]:80;` to `docker/nginx.conf` and updated frontend healthcheck to target `http://127.0.0.1:80/` to resolve IPv6 loopback connection refusal on Alpine Linux.
 - **Backend & DevOps**: `docker/Dockerfile.backend`, `docker/Dockerfile.frontend`, `docker/nginx.conf`, `docker/docker-compose.yml`, `docker/prometheus.yml`, `docker/k6-load-test.js`, `.github/workflows/ci.yml`.
 - **Tests**: 28 backend unit and integration tests passing (`mvn test` exit code 0); Vitest frontend unit tests passing; Vite production build passing (`npm run build` exit code 0); all 6 Docker containers running healthy with HTTP 200 responses verified on all endpoints.
+- **Status**: COMPLETED
+
+### Phase 15: System Design Topics Explorer (HLD/LLD Segregation, Options Code, UML & Related Answers)
+- **Scope**: Comprehensive system design blueprint explorer with full segregation between High-Level Design (HLD) and Low-Level Design (LLD). For every system design topic, provides:
+  1. **System Design Diagram**: High-fidelity architectural topology rendered in Mermaid with components, data flows, and protocol specs.
+  2. **Options Code**: Multi-language production implementations in **Java 25**, **Python 3.12**, **C++ 20**, and **Go** with thread safety, syntax highlighting, and one-click copy.
+  3. **UML Diagrams**: Full UML Class diagrams (object relationships, methods, attributes) and UML Sequence diagrams (end-to-end runtime request message flow).
+  4. **Working & Execution Lifecycle**: Step-by-step chronological request workflows with component spotlight, protocols (HTTPS, gRPC, WebSocket, RESP3), and latency budgets.
+  5. **Related Answers & FAANG Interview Q&A**: Crucial interview questions with model answers, interviewer intent, trade-offs, and edge case defenses.
+- **Backend**: Service `SystemDesignCatalogService`, DTOs (`TopicHubSummaryDto`, `TopicHubDetailDto`, `CodeOptionsDto`, `WorkingStepDto`, `RelatedAnswerDto`), endpoints `GET /api/v1/practice/topics-hub` and `GET /api/v1/practice/topics-hub/{id}` in `PracticeController`, integration in `PracticeService`.
+- **Frontend**: `TopicsExplorerPage.tsx`, routing `/topics`, header navigation pill, mobile drawer link, cross-links on `HldDetailPage` and `LldDetailPage`.
+- **Tests**: 5/5 unit tests in `PracticeServiceTest` passing; 30/30 backend unit and integration tests passing; Vitest unit tests passing; Vite production build passing.
 - **Status**: COMPLETED

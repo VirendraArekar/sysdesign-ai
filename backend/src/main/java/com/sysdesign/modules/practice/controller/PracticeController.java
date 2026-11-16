@@ -51,4 +51,19 @@ public class PracticeController {
             @RequestParam(required = false) String company) {
         return ApiResponse.ok(practiceService.getQuestions(category, company));
     }
+
+    @GetMapping("/topics-hub")
+    @Operation(summary = "Get segregated system design topics (HLD & LLD) with filters")
+    public ApiResponse<List<TopicHubSummaryDto>> getTopicsHub(
+            @RequestParam(required = false, defaultValue = "ALL") String type,
+            @RequestParam(required = false, defaultValue = "ALL") String category,
+            @RequestParam(required = false) String search) {
+        return ApiResponse.ok(practiceService.getTopicsHub(type, category, search));
+    }
+
+    @GetMapping("/topics-hub/{id}")
+    @Operation(summary = "Get full system design topic detail with architecture diagram, code options, UML diagrams, working flow, and related answers")
+    public ApiResponse<TopicHubDetailDto> getTopicHubDetail(@PathVariable String id) {
+        return ApiResponse.ok(practiceService.getTopicHubDetail(id));
+    }
 }

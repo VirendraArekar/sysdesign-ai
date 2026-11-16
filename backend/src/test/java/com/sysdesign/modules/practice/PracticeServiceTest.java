@@ -9,6 +9,9 @@ import com.sysdesign.modules.practice.repository.HldProblemRepository;
 import com.sysdesign.modules.practice.repository.LldProblemRepository;
 import com.sysdesign.modules.practice.repository.QuestionBankRepository;
 import com.sysdesign.modules.practice.service.PracticeService;
+import com.sysdesign.modules.practice.service.SystemDesignCatalogService;
+import com.sysdesign.modules.practice.dto.TopicHubSummaryDto;
+import com.sysdesign.modules.practice.dto.TopicHubDetailDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +34,13 @@ class PracticeServiceTest {
     @Mock
     private QuestionBankRepository questionBankRepository;
 
+    private SystemDesignCatalogService catalogService;
     private PracticeService practiceService;
 
     @BeforeEach
     void setUp() {
-        practiceService = new PracticeService(hldRepository, lldRepository, questionBankRepository);
+        catalogService = new SystemDesignCatalogService();
+        practiceService = new PracticeService(hldRepository, lldRepository, questionBankRepository, catalogService);
     }
 
     @Test
@@ -70,5 +75,35 @@ class PracticeServiceTest {
         assertNotNull(detail);
         assertEquals("parking-lot", detail.id());
         assertEquals("class Code{}", detail.javaSolutionCode());
+    }
+
+    @Test
+    void getTopicsHubFiltersHldAndLldCorrectly() {
+        List<TopicHubSummaryDto> all = practiceService.getTopicsHub("ALL", "ALL", null);
+        assertFalse(all.isEmpty());
+
+        List<TopicHubSummaryDto> hldOnly = practiceService.getTopicsHub("HLD", "ALL", null);
+        assertFalse(hldOnly.isEmpty());
+        assertTrue(hldOnly.stream().allMatch(t -> "HLD".equalsIgnoreCase(t.type())));
+
+        List<TopicHubSummaryDto> lldOnly = practiceService.getTopicsHub("LLD", "ALL", null);
+        assertFalse(lldOnly.isEmpty());
+        assertTrue(lldOnly.stream().allMatch(t -> "LLD".equalsIgnoreCase(t.type())));
+    }
+
+    @Test
+    void getTopicHubDetailReturnsFullMultiLanguageAndUml() {
+        TopicHubDetailDto urlShortener = practiceService.getTopicHubDetail("url-shortener");
+        assertNotNull(urlShortener);
+        assertEquals("url-shortener", urlShortener.id());
+        assertNotNull(urlShortener.systemDesignDiagram());
+        assertNotNull(urlShortener.umlClassDiagram());
+        assertNotNull(urlShortener.umlSequenceDiagram());
+        assertNotNull(urlShortener.codeOptions().java());
+        assertNotNull(urlShortener.codeOptions().python());
+        assertNotNull(urlShortener.codeOptions().cpp());
+        assertNotNull(urlShortener.codeOptions().go());
+        assertFalse(urlShortener.workingSteps().isEmpty());
+        assertFalse(urlShortener.relatedAnswers().isEmpty());
     }
 }

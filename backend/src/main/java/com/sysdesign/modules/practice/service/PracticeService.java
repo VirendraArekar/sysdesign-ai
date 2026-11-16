@@ -20,13 +20,16 @@ public class PracticeService {
     private final HldProblemRepository hldRepository;
     private final LldProblemRepository lldRepository;
     private final QuestionBankRepository questionBankRepository;
+    private final SystemDesignCatalogService catalogService;
 
     public PracticeService(HldProblemRepository hldRepository,
                            LldProblemRepository lldRepository,
-                           QuestionBankRepository questionBankRepository) {
+                           QuestionBankRepository questionBankRepository,
+                           SystemDesignCatalogService catalogService) {
         this.hldRepository = hldRepository;
         this.lldRepository = lldRepository;
         this.questionBankRepository = questionBankRepository;
+        this.catalogService = catalogService;
     }
 
     @Transactional(readOnly = true)
@@ -115,5 +118,14 @@ public class PracticeService {
                         q.getKeyPoints()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public List<TopicHubSummaryDto> getTopicsHub(String type, String category, String search) {
+        return catalogService.getAllSummaries(type, category, search);
+    }
+
+    public TopicHubDetailDto getTopicHubDetail(String id) {
+        return catalogService.getTopicDetail(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Topic not found in system design hub: " + id));
     }
 }
