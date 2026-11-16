@@ -290,4 +290,47 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
      - Live automated CDP verification captured high-resolution screenshots for HLD View, LLD View, Side-by-Side Comparison, and Dark Mode.
 - **Backend**: `backend/src/main/java/com/sysdesign/modules/practice/dto/TopicHubDetailDto.java`.
 - **Frontend**: `frontend/src/types/index.ts`, `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
+- **Commit**: `b333eed` (pushed to `origin main`).
+- **Status**: COMPLETED
+
+### Phase 22: Expansion to 105 Comprehensive System Design Topics (HLD & LLD)
+- **Scope & User Intent**:
+  - The user requested: *"I want at least 100 topics shown in Topics HLD/LLD menu"*.
+  - Expanded the topics catalog from 5 initial seed problems to **105 comprehensive, interview-standard System Design Topics** spanning all essential FAANG system design domains.
+  - Every single topic provides full **High-Level Design (HLD)** and **Low-Level Design (LLD)** coverage:
+    - 5 Core HLD scaling pillars (Throughput & SLA, stateless fleets, Redis multi-tier caching, database sharding, SPOF fault tolerance).
+    - Custom Mermaid HLD architecture topology flowchart.
+    - End-to-end request walkthrough and CAP/PACELC trade-off analysis.
+    - 4 Core LLD OOP & concurrency pillars (SOLID principles, GoF design patterns, thread-safe synchronization locks, extensible domain models).
+    - Interactive Mermaid UML Class Diagram and Sequence Diagram.
+    - Production working code in 4 languages: **Java 25**, **Python 3**, **C++ 20**, and **Go**.
+    - Component lifecycle and concurrency execution patterns.
+    - 5-step operational request flow with latency and protocol breakdown.
+    - Top FAANG interview follow-up questions, interviewer intent, model answers, and edge cases.
+- **Topic Distribution Across 7 Core Domains (105 Total Topics)**:
+  1. **Infrastructure & Distributed Systems (25 topics)**: URL Shortener (TinyURL), Token Bucket Rate Limiter, Snowflake 64-bit ID Generator, Consistent Hashing Ring with vnodes, Redis Cluster Distributed Cache, Kafka Distributed Commit Log, Redlock/Zookeeper Lock Manager, LSM-Tree Key-Value Store, Amazon S3 Object Storage, Global Anycast CDN, Multi-Channel Notification Gateway, Distributed Cron Task Scheduler, Prometheus Metrics TSDB, Jaeger Distributed Tracing, ELK/Loki Centralized Logging, Kong/Envoy API Gateway, Route 53 Authoritative DNS, Istio Service Mesh with mTLS, Real-Time Collaborative Google Docs (CRDT/OT), Consul Config Server, S3 Resumable Chunked File Upload, HashiCorp Vault Secrets KMS, Celery Worker Pool, Typeahead Autocomplete Trie, and Googlebot Web Crawler.
+  2. **Social Media & Real-Time Communication (16 topics)**: WhatsApp Messaging, Facebook/Twitter Newsfeed Fan-out, Bidirectional Social Graph Traversal, Twitch Live Streaming, TikTok Video Feed, Instagram Photo Sharing, Netflix Video Streaming, LinkedIn 3-Degrees Connection Graph, Snapchat Ephemeral Stories, Reddit Hot/Top Upvoting, Tinder Geospatial Proximity Matcher, Spotify Music Streaming, Podcast RSS Ingestion, Zoom WebRTC SFU Video Gateway, Discord Guild Messaging, and Stack Overflow Community Q&A.
+  3. **E-Commerce & Marketplaces (16 topics)**: Amazon Prime Day Flash Sale, High-Availability Shopping Cart, Stripe/PayPal Payment Gateway, Order Fulfillment Saga Orchestrator, Elasticsearch Product Search, Airbnb Vacation Rental Booking, Google Flights Aggregator, BookMyShow Seat Reservation, DoorDash Food Delivery Routing, Uber Ride Matching, Multi-Vendor Escrow Ledger, Customer Review Spam Filter, Collaborative Recommendation Engine, Recurring Subscription Billing, Uber Dynamic Surge Pricing, and Hertz Car Rental Fleet Allocation.
+  4. **Fintech & Banking Systems (11 topics)**: Double-Entry Core Banking Ledger, Stock Exchange Limit Order Matching Engine, Real-Time Crypto Order Book, Venmo/PayPal P2P Digital Wallet, Real-Time Fraud Detection Engine, ISO 8583 Credit Card Switch, ATM Controller & Cash Dispenser, FX Currency Rate Broadcaster, Personal Finance Transaction Aggregator, Loan Underwriting Risk Pipeline, and Splitwise Debt Simplification Engine.
+  5. **Mobility, Logistics & Smart Systems (11 topics)**: Multi-Floor Parking Lot System, Multi-Car Skyscraper Elevator Control, Connected Vehicle Fleet Telematics, Intelligent Traffic Signal Coordination Grid, FedEx Real-Time Package Tracking, IoT Smart Home MQTT Broker, Automated Warehouse AGV Robotics Grid, Lime Micromobility Bike Sharing, Airport Luggage RFID Sorter, EV Charging Grid Load Balancer, and Amazon Smart Parcel Locker.
+  6. **Gaming & Interactive High-Concurrency Systems (10 topics)**: Skill-Based Multiplayer Matchmaking (Elo/MMR), Massive Multiplayer Leaderboard (Redis ZSET), Turn-Based Game Engine & Fischer Clock, Provably Fair Casino Slot Machine RNG, In-Game Inventory Asset Vault, MMO Spatial Grid & AoI Partitioning, Live Trivia Quiz Buzzer, Low-Latency Cloud Gaming Streamer, Chess Engine with Move Validation, and Multiplayer Snake & Ladder Board Game.
+  7. **Low-Level Design (LLD), OOP & Design Patterns (16 topics)**: Modular Tic-Tac-Toe / Connect-N, State-Driven Vending Machine, Coffee Machine with Decorator Pattern, In-Memory File System using Composite Pattern, Custom Thread Pool & Work-Stealing Queue, Extensible Logging Framework using Chain of Responsibility, In-Memory Pub-Sub Broker, Pizza Order Builder Pattern, Cricbuzz Live Scoreboard using Observer, Online English Auction Engine, Math Expression Evaluator using Interpreter Pattern, Circuit Breaker State Machine, Text Editor with Command & Memento Patterns, Traffic Signal Controller, Thread-Safe In-Memory LRU Cache, and Library Management System with Fines.
+- **Architectural Implementation**:
+  1. **Backend Integration (`SystemDesignCatalogService.java`)**:
+     - Configured Jackson `ObjectMapper` resource loading for `/data/topics-catalog.json` at application bootstrap.
+     - Merged handcrafted detailed blueprints (`url-shortener`, `whatsapp-chat`, `parking-lot`, `elevator-system`, `rate-limiter`) with the 100 generated topics.
+     - Updated unit tests (`PracticeServiceTest.java`) with `getTopicsHubReturnsAtLeast100Topics()`: 6/6 tests passing.
+  2. **Frontend Dynamic Category & Catalog Navigation (`TopicsExplorerPage.tsx`)**:
+     - Dynamically computes available categories from `summaries` using `useMemo`.
+     - Automatically updates header indicator to `SYSTEM DESIGN TOPICS (105)`.
+     - Maintained smooth virtual scrolling, search filtering, and single-click switching.
+  3. **Verification & Testing**:
+     - Backend unit tests passed: 6/6 tests passing (`mvn -f backend/pom.xml test -Dtest=PracticeServiceTest`).
+     - Frontend Vitest passed: 5/5 tests passing (`npm --prefix frontend test`).
+     - Frontend production bundle built cleanly (`npm --prefix frontend run build`).
+     - Live containerized deployment restarted and verified healthy (`sysdesign-backend` on port 8082, `sysdesign-frontend` on port 3000).
+     - Verified live endpoint `GET /api/v1/practice/topics-hub` returning `105` topics.
+     - Live CDP browser test verified catalog rendering of `SYSTEM DESIGN TOPICS (105)` and captured verification screenshot.
+- **Backend**: `backend/src/main/resources/data/topics-catalog.json`, `backend/src/main/java/com/sysdesign/modules/practice/service/SystemDesignCatalogService.java`, `backend/src/test/java/com/sysdesign/modules/practice/PracticeServiceTest.java`.
+- **Frontend**: `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
 - **Status**: COMPLETED

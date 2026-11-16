@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import apiClient from '../../services/api';
 import { TopicHubSummary, TopicHubDetail } from '../../types';
@@ -106,14 +106,26 @@ export const TopicsExplorerPage: React.FC = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const categories = [
-    'ALL',
-    'Infrastructure',
-    'Social Media',
-    'Object-Oriented Design',
-    'Algorithms & State Machines',
-    'Concurrency & Algorithms'
-  ];
+  const categories = useMemo(() => {
+    const list = [
+      'ALL',
+      'Infrastructure',
+      'Social Media',
+      'E-Commerce',
+      'Fintech',
+      'Mobility & IoT',
+      'Gaming',
+      'Object-Oriented Design',
+      'Algorithms & State Machines',
+      'Concurrency & Algorithms'
+    ];
+    summaries.forEach((s) => {
+      if (s.category && !list.includes(s.category)) {
+        list.push(s.category);
+      }
+    });
+    return list;
+  }, [summaries]);
 
   // Default fallback HLD points if not returned by backend
   const hldPoints = topicDetail?.hldPoints || [

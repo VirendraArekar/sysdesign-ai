@@ -106,4 +106,10 @@ class PracticeServiceTest {
         assertFalse(urlShortener.workingSteps().isEmpty());
         assertFalse(urlShortener.relatedAnswers().isEmpty());
     }
+
+    @Test
+    void getTopicsHubReturnsAtLeast100Topics() {
+        List<TopicHubSummaryDto> all = practiceService.getTopicsHub("ALL", "ALL", null);
+        assertTrue(all.size() >= 100, "Expected at least 100 topics, but found: " + all.size());
+    }
 }

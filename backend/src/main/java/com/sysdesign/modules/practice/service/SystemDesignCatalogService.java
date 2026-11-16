@@ -1,8 +1,13 @@
 package com.sysdesign.modules.practice.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sysdesign.modules.practice.dto.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -10,10 +15,34 @@ import java.util.stream.Collectors;
 @Service
 public class SystemDesignCatalogService {
 
+    private static final Logger log = LoggerFactory.getLogger(SystemDesignCatalogService.class);
     private final Map<String, TopicHubDetailDto> topicsMap = new ConcurrentHashMap<>();
+    private final ObjectMapper objectMapper;
 
     public SystemDesignCatalogService() {
-        initCatalog();
+        this(new ObjectMapper());
+    }
+
+    public SystemDesignCatalogService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+        loadCatalogFromJson();
+        initHardcodedTopics();
+    }
+
+    private void loadCatalogFromJson() {
+        try (InputStream is = getClass().getResourceAsStream("/data/topics-catalog.json")) {
+            if (is != null) {
+                List<TopicHubDetailDto> list = objectMapper.readValue(is, new TypeReference<List<TopicHubDetailDto>>() {});
+                for (TopicHubDetailDto topic : list) {
+                    topicsMap.put(topic.id(), topic);
+                }
+                log.info("Loaded {} topics from /data/topics-catalog.json into topicsMap", list.size());
+            } else {
+                log.warn("topics-catalog.json not found in classpath /data/");
+            }
+        } catch (Exception e) {
+            log.error("Failed to load /data/topics-catalog.json", e);
+        }
     }
 
     public List<TopicHubSummaryDto> getAllSummaries(String typeFilter, String categoryFilter, String search) {
@@ -44,7 +73,7 @@ public class SystemDesignCatalogService {
         return Optional.ofNullable(topicsMap.get(id));
     }
 
-    private void initCatalog() {
+    private void initHardcodedTopics() {
         // ==========================================
         // 1. HLD: URL Shortener (TinyURL)
         // ==========================================
