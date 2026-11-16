@@ -101,37 +101,37 @@ const INITIAL_NODES: Node[] = [
   {
     id: 'client-1',
     type: 'archNode',
-    position: { x: 50, y: 180 },
+    position: { x: 40, y: 100 },
     data: { label: 'Web & Mobile Clients', category: 'client', techStack: 'React / Next.js', qps: '50k QPS', replicas: 'Global' }
   },
   {
     id: 'cdn-1',
     type: 'archNode',
-    position: { x: 300, y: 180 },
+    position: { x: 200, y: 100 },
     data: { label: 'Cloudflare CDN Edge', category: 'cdn', techStack: 'Anycast DNS + Cache', qps: '50k QPS', replicas: '250+ PoPs' }
   },
   {
     id: 'lb-1',
     type: 'archNode',
-    position: { x: 550, y: 180 },
+    position: { x: 360, y: 100 },
     data: { label: 'API Gateway & L7 LB', category: 'load_balancer', techStack: 'Kong / Envoy', qps: '30k QPS', replicas: '4 Replicas' }
   },
   {
     id: 'app-1',
     type: 'archNode',
-    position: { x: 800, y: 100 },
+    position: { x: 520, y: 60 },
     data: { label: 'Core Application Service', category: 'compute', techStack: 'Spring Boot 3.4 / Java 21', qps: '25k QPS', replicas: '12 Pods' }
   },
   {
     id: 'cache-1',
     type: 'archNode',
-    position: { x: 1080, y: 50 },
+    position: { x: 680, y: 20 },
     data: { label: 'Redis LRU Cache', category: 'cache', techStack: 'Redis 7.2 Cluster', qps: '40k Ops/sec', replicas: '6 Shards' }
   },
   {
     id: 'db-1',
     type: 'archNode',
-    position: { x: 1080, y: 220 },
+    position: { x: 680, y: 120 },
     data: { label: 'PostgreSQL Database', category: 'database', techStack: 'Postgres 16 Multi-AZ', qps: '5k Write TPS', replicas: '1 Primary + 3 Replicas' }
   }
 ];
@@ -567,7 +567,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
       // Smoothly pan viewport so dropped node is clearly focused
       setTimeout(() => {
         try {
-          setCenter(posX + 105, posY + 74, { duration: 300 });
+          setCenter(posX + 62, posY + 22, { duration: 300 });
         } catch (_) {}
       }, 50);
 
@@ -614,8 +614,8 @@ const ArchitectureDesignerCanvas: React.FC = () => {
     const offsetIndex = Math.max(0, nodes.length - 6);
     const col = offsetIndex % 4;
     const row = Math.floor(offsetIndex / 4);
-    const posX = 80 + col * 260;
-    const posY = 360 + row * 160;
+    const posX = 40 + col * 160;
+    const posY = 190 + row * 75;
 
     const id = `${cat}-${Date.now()}`;
     const newNode: Node = {
@@ -647,7 +647,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
     // Smoothly pan camera so the newly added node is focused in view
     setTimeout(() => {
       try {
-        setCenter(posX + 105, posY + 74, { duration: 400 });
+        setCenter(posX + 62, posY + 22, { duration: 400 });
       } catch (_) {}
     }, 50);
 

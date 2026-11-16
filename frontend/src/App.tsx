@@ -130,9 +130,6 @@ const AppContent: React.FC = () => {
                 <span className="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-700 dark:from-white dark:via-slate-200 dark:to-[#A78BFA] bg-clip-text text-transparent">
                   System Design AI
                 </span>
-                <span className="ml-1.5 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-[#6366F1]/20 text-indigo-600 dark:text-[#A78BFA] border border-indigo-200 dark:border-[#6366F1]/30 font-medium">
-                  v1.0 Pro
-                </span>
               </div>
             </Link>
           </div>
