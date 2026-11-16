@@ -28,7 +28,7 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 14** | DevOps, Docker Compose, CI/CD, Monitoring & Production Deployment | COMPLETED | COMPLETED | COMPLETED | COMPLETED | ffbb104 | SUCCESS |
 | **Phase 15** | System Design Topics Explorer (HLD/LLD Segregation, Multi-Lang Code, UML & Q&A) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | af81984 | SUCCESS |
 | **Phase 16** | Architecture Designer Drag-and-Drop Fix, Theme Switcher & Responsiveness | COMPLETED | COMPLETED | COMPLETED | COMPLETED | d34ab88 | SUCCESS |
-| **Phase 17** | Designer End-to-End Drag & Drop Fix, Backend Component Catalog & Validation, Cache Busting | COMPLETED | COMPLETED | COMPLETED | COMPLETED | PENDING | PENDING |
+| **Phase 17** | Designer End-to-End Drag & Drop Fix, Backend Component Catalog & Validation, Cache Busting | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 1a0128a | SUCCESS |
 
 ---
 
@@ -166,4 +166,5 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
      - Frontend: Component test `ArchitectureDesignerPage.component.test.tsx` testing canvas rendering, `+ Add` button placement, and native HTML5 drag-and-drop events — all 5 frontend tests passing (`npm test`).
 - **Backend**: `ComponentDefinitionDto.java`, `NodeValidationRequest.java`, `NodeValidationResponse.java`, `ArchitectureService.java`, `ArchitectureController.java`, `SecurityConfig.java`, `ArchitectureServiceTest.java`.
 - **Frontend**: `ArchitectureDesignerPage.tsx`, `ArchitectureDesignerPage.component.test.tsx`, `vite.config.ts`, `docker/nginx.conf`.
+- **Commit**: `1a0128a` (pushed to `origin main`).
 - **Status**: COMPLETED
