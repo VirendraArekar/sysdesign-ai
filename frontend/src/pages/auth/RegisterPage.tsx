@@ -46,7 +46,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1020] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1020] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden transition-colors">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-[#06B6D4]/10 via-transparent to-transparent pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
@@ -55,18 +55,18 @@ export const RegisterPage: React.FC = () => {
             <Bot className="w-6 h-6" />
           </div>
         </Link>
-        <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white">
+        <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
           Create your account
         </h2>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
           Level up to Senior, Staff, and Principal Engineer
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4">
-        <div className="bg-[#151C2E] py-8 px-6 shadow-xl border border-[#1E293B] rounded-2xl sm:px-10">
+        <div className="bg-white dark:bg-[#151C2E] py-8 px-6 shadow-xl border border-slate-200 dark:border-[#1E293B] rounded-2xl sm:px-10">
           {serverError && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3 text-red-400 text-sm">
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3 text-red-500 dark:text-red-400 text-sm">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <span>{serverError}</span>
             </div>
@@ -74,62 +74,62 @@ export const RegisterPage: React.FC = () => {
 
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                 Full Name
               </label>
               <div className="relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                   <UserIcon className="h-4 w-4" />
                 </div>
                 <input
                   {...register('fullName')}
                   type="text"
                   placeholder="Virendra Arekar"
-                  className="block w-full pl-10 pr-3 py-2.5 bg-[#0B1020] border border-[#1E293B] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent text-sm transition-all"
+                  className="block w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent text-sm transition-all"
                 />
               </div>
               {errors.fullName && (
-                <p className="mt-1.5 text-xs text-red-400">{errors.fullName.message}</p>
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.fullName.message}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                 Email address
               </label>
               <div className="relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                   <Mail className="h-4 w-4" />
                 </div>
                 <input
                   {...register('email')}
                   type="email"
                   placeholder="architect@tech.com"
-                  className="block w-full pl-10 pr-3 py-2.5 bg-[#0B1020] border border-[#1E293B] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent text-sm transition-all"
+                  className="block w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent text-sm transition-all"
                 />
               </div>
               {errors.email && (
-                <p className="mt-1.5 text-xs text-red-400">{errors.email.message}</p>
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.email.message}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                 Password
               </label>
               <div className="relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                   <Lock className="h-4 w-4" />
                 </div>
                 <input
                   {...register('password')}
                   type="password"
                   placeholder="Minimum 6 characters"
-                  className="block w-full pl-10 pr-3 py-2.5 bg-[#0B1020] border border-[#1E293B] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent text-sm transition-all"
+                  className="block w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent text-sm transition-all"
                 />
               </div>
               {errors.password && (
-                <p className="mt-1.5 text-xs text-red-400">{errors.password.message}</p>
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{errors.password.message}</p>
               )}
             </div>
 
@@ -150,9 +150,9 @@ export const RegisterPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-400">
+          <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
             Already have an account?{' '}
-            <Link to="/login" className="text-[#A78BFA] hover:text-[#6366F1] font-semibold transition-colors">
+            <Link to="/login" className="text-[#6366F1] dark:text-[#A78BFA] hover:underline font-semibold transition-colors">
               Sign In
             </Link>
           </div>

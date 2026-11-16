@@ -39,7 +39,8 @@ import {
   Menu,
   X,
   Sun,
-  Moon
+  Moon,
+  ChevronDown
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
@@ -114,65 +115,171 @@ const AppContent: React.FC = () => {
   const { theme, resolvedTheme, toggleTheme } = useTheme();
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = React.useState(false);
+  const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const location = useLocation();
   const isDesigner = location.pathname === '/designer';
+
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B1020] text-slate-900 dark:text-[#F8FAFC] transition-colors duration-200">
         {/* Top Navigation */}
         <header className="h-16 border-b border-slate-200 dark:border-[#1E293B] bg-white/90 dark:bg-[#151C2E]/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center gap-3">
-            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 sm:gap-3">
-              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-[#6366F1] to-[#06B6D4] flex items-center justify-center font-bold text-white shadow-lg shadow-[#6366F1]/20">
+          <div className="flex items-center gap-3 shrink-0">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-[#6366F1] to-[#06B6D4] flex items-center justify-center font-bold text-white shadow-lg shadow-[#6366F1]/20 shrink-0">
                 <Bot className="w-5 h-5" />
               </div>
-              <div>
-                <span className="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-700 dark:from-white dark:via-slate-200 dark:to-[#A78BFA] bg-clip-text text-transparent">
+              <div className="whitespace-nowrap">
+                <span className="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-700 dark:from-white dark:via-slate-200 dark:to-[#A78BFA] bg-clip-text text-transparent whitespace-nowrap">
                   System Design AI
                 </span>
               </div>
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center gap-1">
-            <Link to="/dashboard" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
-              Dashboard
-            </Link>
-            <Link to="/topics" className="px-3 py-1.5 rounded-lg text-sm font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-500/30 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 transition-colors flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+          <nav className="hidden lg:flex items-center gap-1 shrink-0">
+            {/* 1. Topics Hub (HLD/LLD) */}
+            <Link 
+              to="/topics" 
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                location.pathname.startsWith('/topics')
+                  ? 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-500/40 shadow-xs'
+                  : 'text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/30'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
               <span>Topics (HLD/LLD)</span>
             </Link>
-            <Link to="/curriculum" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
-              Curriculum
-            </Link>
-            <Link to="/hld" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
-              HLD Practice
-            </Link>
-            <Link to="/lld" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
-              LLD Practice
-            </Link>
-            <Link to="/interview" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
-              AI Interview
-            </Link>
-            <Link to="/designer" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
+
+            {/* 2. Architecture Designer */}
+            <Link 
+              to="/designer" 
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                location.pathname.startsWith('/designer')
+                  ? 'bg-indigo-50 dark:bg-[#6366F1]/20 text-indigo-700 dark:text-[#A78BFA] font-semibold'
+                  : 'font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+              }`}
+            >
               Designer
             </Link>
-            <Link to="/simulators" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
+
+            {/* 3. AI Interview Simulator */}
+            <Link 
+              to="/interview" 
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                location.pathname.startsWith('/interview')
+                  ? 'bg-indigo-50 dark:bg-[#6366F1]/20 text-indigo-700 dark:text-[#A78BFA] font-semibold'
+                  : 'font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+              }`}
+            >
+              AI Interview
+            </Link>
+
+            {/* 4. Distributed Simulators */}
+            <Link 
+              to="/simulators" 
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                location.pathname.startsWith('/simulators')
+                  ? 'bg-indigo-50 dark:bg-[#6366F1]/20 text-indigo-700 dark:text-[#A78BFA] font-semibold'
+                  : 'font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+              }`}
+            >
               Simulators
             </Link>
-            <Link to="/questions" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
-              Questions
+
+            {/* 5. 13-Module Curriculum */}
+            <Link 
+              to="/curriculum" 
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                location.pathname.startsWith('/curriculum')
+                  ? 'bg-indigo-50 dark:bg-[#6366F1]/20 text-indigo-700 dark:text-[#A78BFA] font-semibold'
+                  : 'font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+              }`}
+            >
+              Curriculum
             </Link>
-            <Link to="/admin" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors">
-              Admin
+
+            {/* 6. Dashboard */}
+            <Link 
+              to="/dashboard" 
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                location.pathname === '/dashboard'
+                  ? 'bg-indigo-50 dark:bg-[#6366F1]/20 text-indigo-700 dark:text-[#A78BFA] font-semibold'
+                  : 'font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+              }`}
+            >
+              Dashboard
             </Link>
+
+            {/* 7. More Dropdown */}
+            <div className="relative" ref={moreMenuRef}>
+              <button
+                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                className={`px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1 cursor-pointer ${
+                  moreMenuOpen || ['/hld', '/lld', '/questions', '/admin'].some(p => location.pathname.startsWith(p))
+                    ? 'text-indigo-600 dark:text-[#A78BFA] bg-indigo-50 dark:bg-[#1E293B] font-semibold'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+                }`}
+              >
+                <span>More</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${moreMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {moreMenuOpen && (
+                <div className="absolute right-0 mt-2 w-52 rounded-xl bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95">
+                  <Link
+                    to="/hld"
+                    onClick={() => setMoreMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors whitespace-nowrap"
+                  >
+                    <Layers className="w-4 h-4 text-indigo-500" />
+                    <span>HLD Blueprints (40+)</span>
+                  </Link>
+                  <Link
+                    to="/lld"
+                    onClick={() => setMoreMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors whitespace-nowrap"
+                  >
+                    <Code2 className="w-4 h-4 text-cyan-500" />
+                    <span>LLD Practice (20+)</span>
+                  </Link>
+                  <Link
+                    to="/questions"
+                    onClick={() => setMoreMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors whitespace-nowrap"
+                  >
+                    <HelpCircle className="w-4 h-4 text-amber-500" />
+                    <span>Question Bank</span>
+                  </Link>
+                  <div className="my-1 border-t border-slate-100 dark:border-[#1E293B]" />
+                  <Link
+                    to="/admin"
+                    onClick={() => setMoreMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors whitespace-nowrap"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                    <span>Admin & Monetization</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-slate-600 dark:text-amber-400 transition-all cursor-pointer"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-slate-600 dark:text-amber-400 transition-all cursor-pointer shrink-0"
               title={resolvedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label="Toggle Theme"
             >
@@ -185,43 +292,43 @@ const AppContent: React.FC = () => {
 
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shrink-0 whitespace-nowrap"
               title="Search System Design Topics (Cmd+K)"
             >
-              <Search className="w-3.5 h-3.5 text-cyan-600 dark:text-[#06B6D4]" />
-              <span className="hidden sm:inline">Search & Ask AI...</span>
+              <Search className="w-3.5 h-3.5 text-cyan-600 dark:text-[#06B6D4] shrink-0" />
+              <span className="hidden sm:inline whitespace-nowrap">Search & Ask AI...</span>
               <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-[#0B1020] text-slate-500 dark:text-slate-400 font-mono border border-slate-200 dark:border-[#334155]">⌘K</kbd>
             </button>
 
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Link to="/profile" className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-xs sm:text-sm text-slate-800 dark:text-white transition-all">
-                  <User className="w-4 h-4 text-indigo-500 dark:text-[#A78BFA]" />
-                  <span className="font-medium text-xs hidden sm:inline">{user.fullName}</span>
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <Link to="/profile" className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-xs sm:text-sm text-slate-800 dark:text-white transition-all shrink-0 whitespace-nowrap">
+                  <User className="w-4 h-4 text-indigo-500 dark:text-[#A78BFA] shrink-0" />
+                  <span className="font-medium text-xs hidden sm:inline whitespace-nowrap">{user.fullName}</span>
                 </Link>
                 <button
                   onClick={() => dispatch(logout())}
-                  className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors"
+                  className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors shrink-0"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <>
-                <Link to="/login" className="px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <Link to="/login" className="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 whitespace-nowrap">
                   Sign In
                 </Link>
-                <Link to="/register" className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-[#6366F1]/25 transition-all">
+                <Link to="/register" className="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-md shadow-[#6366F1]/25 transition-all shrink-0 whitespace-nowrap">
                   Get Started
                 </Link>
-              </>
+              </div>
             )}
 
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] text-slate-700 dark:text-slate-300 transition-colors"
+              className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] text-slate-700 dark:text-slate-300 transition-colors shrink-0"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -231,45 +338,43 @@ const AppContent: React.FC = () => {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white dark:bg-[#151C2E] border-b border-slate-200 dark:border-[#1E293B] px-4 py-3 space-y-1 z-40 animate-in slide-in-from-top-2">
+          <div className="lg:hidden bg-white dark:bg-[#151C2E] border-b border-slate-200 dark:border-[#1E293B] px-4 py-3 space-y-1 z-40 animate-in slide-in-from-top-2 shadow-xl">
             {[
-              { to: '/dashboard', label: 'Dashboard' },
-              { to: '/topics', label: 'Topics Hub (HLD/LLD)' },
-              { to: '/curriculum', label: 'Curriculum' },
-              { to: '/hld', label: 'HLD Practice' },
-              { to: '/lld', label: 'LLD Practice' },
-              { to: '/interview', label: 'AI Interview' },
-              { to: '/designer', label: 'Architecture Designer' },
-              { to: '/simulators', label: '18 Distributed Simulators' },
-              { to: '/questions', label: 'Question Bank' },
-              { to: '/admin', label: 'Admin & Monetization' }
+              { to: '/topics', label: 'Topics Hub (HLD/LLD)', icon: Sparkles, highlight: true },
+              { to: '/designer', label: 'Architecture Designer', icon: Network },
+              { to: '/interview', label: 'AI Mock Interview', icon: Bot },
+              { to: '/simulators', label: '18 Distributed Simulators', icon: Calculator },
+              { to: '/curriculum', label: '13-Module Curriculum', icon: BookOpen },
+              { to: '/dashboard', label: 'Learning Dashboard', icon: BarChart3 },
+              { to: '/hld', label: 'HLD Blueprints (40+)', icon: Layers },
+              { to: '/lld', label: 'LLD Practice (20+)', icon: Code2 },
+              { to: '/questions', label: 'Question Bank', icon: HelpCircle },
+              { to: '/admin', label: 'Admin & Monetization', icon: ShieldCheck }
             ].map((link, idx) => (
               <Link
                 key={idx}
                 to={link.to}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B] transition-colors"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                  location.pathname.startsWith(link.to)
+                    ? 'bg-indigo-50 dark:bg-[#6366F1]/20 text-indigo-700 dark:text-[#A78BFA] font-semibold'
+                    : link.highlight
+                      ? 'text-cyan-700 dark:text-cyan-300 font-medium hover:bg-cyan-50 dark:hover:bg-cyan-950/30'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+                }`}
               >
-                {link.label}
+                <link.icon className={`w-4 h-4 shrink-0 ${link.highlight ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <span>{link.label}</span>
               </Link>
             ))}
             <div className="pt-2 border-t border-slate-200 dark:border-[#1E293B] flex items-center justify-between px-3 py-2">
-              <span className="text-xs text-slate-500">Theme</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Theme</span>
               <button
                 onClick={toggleTheme}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-[#1E293B] text-xs font-medium text-slate-700 dark:text-slate-300"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-[#1E293B] text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#334155]"
               >
-                {resolvedTheme === 'dark' ? (
-                  <>
-                    <Sun className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Light Mode</span>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="w-3.5 h-3.5 text-slate-700" />
-                    <span>Dark Mode</span>
-                  </>
-                )}
+                {resolvedTheme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-700" />}
+                <span>{resolvedTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
               </button>
             </div>
           </div>

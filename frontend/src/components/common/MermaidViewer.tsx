@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
+import { useTheme } from '../../context/ThemeContext';
 
 interface MermaidViewerProps {
   chart: string;
@@ -9,12 +10,14 @@ export const MermaidViewer: React.FC<MermaidViewerProps> = ({ chart }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgContent, setSvgContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
+    const isDark = resolvedTheme === 'dark';
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
-      themeVariables: {
+      theme: isDark ? 'dark' : 'default',
+      themeVariables: isDark ? {
         primaryColor: '#6366F1',
         primaryTextColor: '#F8FAFC',
         primaryBorderColor: '#4F46E5',
@@ -27,6 +30,19 @@ export const MermaidViewer: React.FC<MermaidViewerProps> = ({ chart }) => {
         clusterBkg: '#151C2E',
         clusterBorder: '#334155',
         edgeLabelBackground: '#1E293B',
+      } : {
+        primaryColor: '#6366F1',
+        primaryTextColor: '#0F172A',
+        primaryBorderColor: '#6366F1',
+        lineColor: '#0891B2',
+        secondaryColor: '#F8FAFC',
+        tertiaryColor: '#FFFFFF',
+        background: '#F8FAFC',
+        mainBkg: '#FFFFFF',
+        nodeBorder: '#CBD5E1',
+        clusterBkg: '#F1F5F9',
+        clusterBorder: '#CBD5E1',
+        edgeLabelBackground: '#FFFFFF',
       },
       fontFamily: 'Inter, sans-serif',
     });
@@ -45,13 +61,13 @@ export const MermaidViewer: React.FC<MermaidViewerProps> = ({ chart }) => {
     };
 
     renderChart();
-  }, [chart]);
+  }, [chart, resolvedTheme]);
 
   if (error) {
     return (
-      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono">
+      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-mono">
         {error}
-        <pre className="mt-2 text-slate-400 overflow-x-auto">{chart}</pre>
+        <pre className="mt-2 text-slate-600 dark:text-slate-400 overflow-x-auto">{chart}</pre>
       </div>
     );
   }
@@ -59,7 +75,7 @@ export const MermaidViewer: React.FC<MermaidViewerProps> = ({ chart }) => {
   return (
     <div
       ref={containerRef}
-      className="p-6 rounded-2xl bg-[#0B1020] border border-[#1E293B] overflow-x-auto flex justify-center items-center [&>svg]:max-w-full [&>svg]:h-auto"
+      className="p-6 rounded-2xl bg-white dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] shadow-sm overflow-x-auto flex justify-center items-center [&>svg]:max-w-full [&>svg]:h-auto transition-colors"
       dangerouslySetInnerHTML={{ __html: svgContent }}
     />
   );

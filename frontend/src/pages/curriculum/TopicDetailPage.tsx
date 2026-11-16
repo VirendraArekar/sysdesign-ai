@@ -152,7 +152,7 @@ export const TopicDetailPage: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <Link
           to="/curriculum"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Curriculum
         </Link>
@@ -162,11 +162,11 @@ export const TopicDetailPage: React.FC = () => {
             onClick={handleToggleBookmark}
             className={`p-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
               bookmarked
-                ? 'bg-[#6366F1]/20 border-[#6366F1] text-[#A78BFA]'
-                : 'bg-[#151C2E] border-[#1E293B] text-slate-400 hover:text-white'
+                ? 'bg-indigo-50 dark:bg-[#6366F1]/20 border-indigo-300 dark:border-[#6366F1] text-indigo-700 dark:text-[#A78BFA]'
+                : 'bg-white dark:bg-[#151C2E] border-slate-200 dark:border-[#1E293B] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-xs'
             }`}
           >
-            {bookmarked ? <BookmarkCheck className="w-4 h-4 text-[#A78BFA]" /> : <Bookmark className="w-4 h-4" />}
+            {bookmarked ? <BookmarkCheck className="w-4 h-4 text-[#6366F1] dark:text-[#A78BFA]" /> : <Bookmark className="w-4 h-4" />}
             <span>{bookmarked ? 'Bookmarked' : 'Bookmark'}</span>
           </button>
 
@@ -174,8 +174,8 @@ export const TopicDetailPage: React.FC = () => {
             onClick={handleToggleCompleted}
             className={`px-4 py-2 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
               progressStatus === 'COMPLETED'
-                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                : 'bg-[#151C2E] border-[#1E293B] text-slate-300 hover:text-white hover:border-[#6366F1]'
+                ? 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400'
+                : 'bg-white dark:bg-[#151C2E] border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-[#6366F1] shadow-xs'
             }`}
           >
             <CheckCircle2 className="w-4 h-4" />
@@ -185,22 +185,22 @@ export const TopicDetailPage: React.FC = () => {
       </div>
 
       {/* Hero Header */}
-      <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6 sm:p-8 mb-8">
+      <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 sm:p-8 mb-8 shadow-xs">
         <div className="flex flex-wrap items-center gap-3 mb-2">
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#6366F1]/20 text-[#A78BFA] border border-[#6366F1]/30 font-semibold uppercase">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-[#6366F1]/20 text-indigo-700 dark:text-[#A78BFA] border border-indigo-200 dark:border-[#6366F1]/30 font-semibold uppercase">
             {topic.moduleTitle}
           </span>
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-semibold uppercase">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 font-semibold uppercase">
             {topic.difficulty} Level
           </span>
         </div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">{topic.title}</h1>
-        <p className="text-slate-400 text-sm mt-2 max-w-3xl leading-relaxed">{topic.summary}</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{topic.title}</h1>
+        <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 max-w-3xl leading-relaxed">{topic.summary}</p>
 
         {topic.subtopics.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#1E293B]">
+          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-[#1E293B]">
             {topic.subtopics.map((sub, idx) => (
-              <span key={idx} className="text-xs px-2.5 py-1 rounded-lg bg-[#0B1020] text-slate-300 border border-[#1E293B]">
+              <span key={idx} className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#0B1020] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#1E293B]">
                 • {sub}
               </span>
             ))}
@@ -209,13 +209,13 @@ export const TopicDetailPage: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-[#1E293B] mb-6 overflow-x-auto gap-2">
+      <div className="flex border-b border-slate-200 dark:border-[#1E293B] mb-6 overflow-x-auto gap-2">
         <button
           onClick={() => setActiveTab('deep')}
           className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'deep'
-              ? 'border-[#6366F1] text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <Cpu className="w-4 h-4 text-[#6366F1]" /> Deep Technical Architecture
@@ -225,8 +225,8 @@ export const TopicDetailPage: React.FC = () => {
           onClick={() => setActiveTab('beginner')}
           className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'beginner'
-              ? 'border-[#6366F1] text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <Sparkles className="w-4 h-4 text-[#06B6D4]" /> Intuitive Explanation
@@ -236,8 +236,8 @@ export const TopicDetailPage: React.FC = () => {
           onClick={() => setActiveTab('diagram')}
           className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'diagram'
-              ? 'border-[#6366F1] text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <Layers className="w-4 h-4 text-[#A78BFA]" /> Architecture Diagram
@@ -247,33 +247,33 @@ export const TopicDetailPage: React.FC = () => {
           onClick={() => setActiveTab('tradeoffs')}
           className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'tradeoffs'
-              ? 'border-[#6366F1] text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
-          <ThumbsUp className="w-4 h-4 text-emerald-400" /> Trade-offs & Use Cases
+          <ThumbsUp className="w-4 h-4 text-emerald-500" /> Trade-offs & Use Cases
         </button>
 
         <button
           onClick={() => setActiveTab('interview')}
           className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'interview'
-              ? 'border-[#6366F1] text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
-          <HelpCircle className="w-4 h-4 text-amber-400" /> Interview Questions
+          <HelpCircle className="w-4 h-4 text-amber-500" /> Interview Questions
         </button>
 
         <button
           onClick={() => setActiveTab('exercises')}
           className={`px-4 py-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'exercises'
-              ? 'border-[#6366F1] text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
-          <Terminal className="w-4 h-4 text-indigo-400" /> Exercises
+          <Terminal className="w-4 h-4 text-indigo-500" /> Exercises
         </button>
       </div>
 
@@ -281,30 +281,30 @@ export const TopicDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           {activeTab === 'deep' && (
-            <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4 shadow-xs">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-[#6366F1]" /> Deep Technical Analysis
               </h3>
-              <div className="text-slate-300 leading-relaxed text-sm whitespace-pre-line space-y-4">
+              <div className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm whitespace-pre-line space-y-4">
                 {topic.deepTechnicalExplanation}
               </div>
             </div>
           )}
 
           {activeTab === 'beginner' && (
-            <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4 shadow-xs">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#06B6D4]" /> Intuitive Mental Model
               </h3>
-              <div className="p-4 rounded-xl bg-[#0B1020] border border-[#1E293B] text-slate-300 text-sm leading-relaxed italic">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 text-sm leading-relaxed italic">
                 "{topic.beginnerExplanation}"
               </div>
             </div>
           )}
 
           {activeTab === 'diagram' && (
-            <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4 shadow-xs">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Layers className="w-5 h-5 text-[#A78BFA]" /> System Flow & Topology
               </h3>
               <MermaidViewer chart={topic.architectureDiagramMermaid} />
@@ -313,42 +313,42 @@ export const TopicDetailPage: React.FC = () => {
 
           {activeTab === 'tradeoffs' && (
             <div className="space-y-6">
-              <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6">
-                <h3 className="text-base font-bold text-emerald-400 flex items-center gap-2 mb-3">
+              <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 shadow-xs">
+                <h3 className="text-base font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 mb-3">
                   <ThumbsUp className="w-4 h-4" /> Architectural Advantages
                 </h3>
-                <ul className="space-y-2 text-sm text-slate-300">
+                <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   {advantages.map((adv, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span className="text-emerald-500 font-bold">✓</span>
                       <span>{adv}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6">
-                <h3 className="text-base font-bold text-red-400 flex items-center gap-2 mb-3">
+              <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 shadow-xs">
+                <h3 className="text-base font-bold text-red-600 dark:text-red-400 flex items-center gap-2 mb-3">
                   <ThumbsDown className="w-4 h-4" /> Disadvantages & Trade-offs
                 </h3>
-                <ul className="space-y-2 text-sm text-slate-300">
+                <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   {disadvantages.map((dis, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-red-400 font-bold">✗</span>
+                      <span className="text-red-500 font-bold">✗</span>
                       <span>{dis}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6">
-                <h3 className="text-base font-bold text-cyan-400 flex items-center gap-2 mb-3">
+              <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 shadow-xs">
+                <h3 className="text-base font-bold text-cyan-700 dark:text-cyan-400 flex items-center gap-2 mb-3">
                   <FileText className="w-4 h-4" /> Real-World Production Implementations
                 </h3>
-                <ul className="space-y-2 text-sm text-slate-300">
+                <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   {useCases.map((uc, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-cyan-400 font-bold">▸</span>
+                      <span className="text-cyan-600 dark:text-cyan-400 font-bold">▸</span>
                       <span>{uc}</span>
                     </li>
                   ))}
@@ -358,14 +358,14 @@ export const TopicDetailPage: React.FC = () => {
           )}
 
           {activeTab === 'interview' && (
-            <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                <HelpCircle className="w-5 h-5 text-amber-400" /> Staff & Principal Interview Questions
+            <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4 shadow-xs">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                <HelpCircle className="w-5 h-5 text-amber-500" /> Staff & Principal Interview Questions
               </h3>
               <div className="space-y-3">
                 {interviewQuestions.map((q, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-[#0B1020] border border-[#1E293B] text-slate-200 text-sm">
-                    <span className="text-[#A78BFA] font-bold mr-2">Q{idx + 1}.</span>
+                  <div key={idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-200 text-sm">
+                    <span className="text-indigo-600 dark:text-[#A78BFA] font-bold mr-2">Q{idx + 1}.</span>
                     {q}
                   </div>
                 ))}
@@ -374,14 +374,14 @@ export const TopicDetailPage: React.FC = () => {
           )}
 
           {activeTab === 'exercises' && (
-            <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                <Terminal className="w-5 h-5 text-indigo-400" /> Practical Hands-On Exercises
+            <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 sm:p-8 space-y-4 shadow-xs">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                <Terminal className="w-5 h-5 text-indigo-500" /> Practical Hands-On Exercises
               </h3>
               <div className="space-y-3">
                 {practicalExercises.map((ex, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-[#0B1020] border border-[#1E293B] text-slate-200 text-sm">
-                    <span className="text-indigo-400 font-bold mr-2">Exercise {idx + 1}:</span>
+                  <div key={idx} className="p-4 rounded-xl bg-slate-50 dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-200 text-sm">
+                    <span className="text-indigo-600 dark:text-indigo-400 font-bold mr-2">Exercise {idx + 1}:</span>
                     {ex}
                   </div>
                 ))}
@@ -392,8 +392,8 @@ export const TopicDetailPage: React.FC = () => {
 
         {/* Sidebar: Notes & Quick Links */}
         <div className="space-y-6">
-          <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6">
-            <h3 className="text-base font-bold text-white flex items-center gap-2 mb-3">
+          <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 shadow-xs">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
               <FileText className="w-4 h-4 text-[#A78BFA]" /> Private Study Notes
             </h3>
             <textarea
@@ -401,13 +401,13 @@ export const TopicDetailPage: React.FC = () => {
               onChange={(e) => setNoteContent(e.target.value)}
               placeholder="Record your architectural insights, key takeaways, and mock interview reminders..."
               rows={8}
-              className="w-full p-3 bg-[#0B1020] border border-[#1E293B] rounded-xl text-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] resize-none"
+              className="w-full p-3 bg-slate-50 dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] rounded-xl text-slate-900 dark:text-white text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] resize-none"
             />
             <div className="flex justify-end mt-3">
               <button
                 onClick={handleSaveNote}
                 disabled={savingNote}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-semibold disabled:opacity-50 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-semibold disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
                 {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 <span>Save Note</span>
@@ -415,8 +415,8 @@ export const TopicDetailPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-[#151C2E] border border-[#1E293B] rounded-2xl p-6 space-y-3">
-            <h3 className="text-sm font-bold text-white">Next Steps</h3>
+          <div className="bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#1E293B] rounded-2xl p-6 space-y-3 shadow-xs">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Next Steps</h3>
             <Link
               to="/interview"
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#06B6D4] text-white text-xs font-semibold shadow-md shadow-[#6366F1]/20 hover:opacity-95 transition-all"
@@ -425,7 +425,7 @@ export const TopicDetailPage: React.FC = () => {
             </Link>
             <Link
               to="/designer"
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B1020] border border-[#1E293B] text-slate-300 hover:text-white text-xs font-semibold transition-all"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-100 dark:bg-[#0B1020] border border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition-all"
             >
               Model in Architecture Designer
             </Link>

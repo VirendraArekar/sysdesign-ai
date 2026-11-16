@@ -31,6 +31,7 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 17** | Designer End-to-End Drag & Drop Fix, Backend Component Catalog & Validation, Cache Busting | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 1a0128a | SUCCESS |
 | **Phase 18** | Architecture Canvas Flexbox Zero-Height Resolution, Camera Auto-Centering & Visible Node Rendering | COMPLETED | COMPLETED | COMPLETED | COMPLETED | fcc2e07 | SUCCESS |
 | **Phase 19** | Architecture Designer Compact Node Footprint (1/3rd Area Reduction) & Spacing Optimization | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 4144869 | SUCCESS |
+| **Phase 20** | Top Navigation Streamlining, Single-Line Wrap Prevention & Comprehensive Light/Dark Theme Support | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 5524fe4 | SUCCESS |
 
 ---
 
@@ -218,4 +219,37 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
      - Production Vite bundle built cleanly in containerized multi-stage Docker environment.
 - **Frontend**: `frontend/src/pages/designer/ArchitectureNode.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.component.test.tsx`.
 - **Commit**: `4144869` (pushed to `origin main`).
+- **Status**: COMPLETED
+
+### Phase 20: Top Navigation Streamlining, Single-Line Wrap Prevention & Comprehensive Light/Dark Theme Support
+- **Scope**:
+  1. **Top Menu Navigation Streamlining & Collapsing Prevention (`frontend/src/App.tsx`)**:
+     - **Issue**: The top navigation header previously packed 10 individual full-length link buttons into a tight flex container without `whitespace-nowrap`. On screens between $768\text{px}$ and $1280\text{px}$, labels like `Topics (HLD/LLD)` and `HLD Practice` wrapped into two vertical lines, expanding the header height and colliding with the search bar and action buttons.
+     - **Streamlined Architecture**:
+       - Consolidated top items from 10 cluttered links to 6 essential primary destinations: `/topics`, `/designer`, `/interview`, `/simulators`, `/curriculum`, and `/dashboard`.
+       - Moved secondary destinations (`/hld`, `/lld`, `/questions`, `/admin`) into a dedicated, clean "More" dropdown with outside-click dismissal listeners and icon badges.
+       - Enforced `whitespace-nowrap` on the logo, brand name, every navigation link, search shortcut trigger, profile badge, and auth buttons to eliminate multi-line text wrapping across all viewports.
+       - Added active route indicator highlighting (`location.pathname.startsWith(...)`).
+       - Retained full menu access inside the mobile hamburger drawer with categorized sections and light/dark theme toggle.
+  2. **Comprehensive Light & Dark Mode Across Every Screen**:
+     - Systematically converted all screens from hardcoded dark styles to semantic, responsive Tailwind CSS light/dark utility pairs:
+       - **Curriculum & Topics (`CurriculumListPage.tsx`, `TopicDetailPage.tsx`)**: Converted modules, search filters, technical analysis cards, trade-off comparisons, use cases, and study notes textarea to `bg-white dark:bg-[#151C2E]`, `text-slate-900 dark:text-white`, `border-slate-200 dark:border-[#1E293B]`.
+       - **AI Mock Interview & History (`InterviewPage.tsx`, `InterviewHistoryPage.tsx`)**: Updated root container, setup cards, chat message bubbles, voice controls, and 15-category report modal to responsive light/dark classes.
+       - **Practice Hubs (`HldListPage.tsx`, `LldListPage.tsx`, `HldDetailPage.tsx`, `LldDetailPage.tsx`, `QuestionBankPage.tsx`)**: Converted blueprint cards, OOP problem lists, requirement grids, capacity cards, and company question accordions to light/dark mode. Connected Monaco Editor theme to `useTheme()` (`light` vs `vs-dark`).
+       - **Mermaid Diagram Viewer (`MermaidViewer.tsx`)**: Connected dynamic theme switcher (`theme: isDark ? 'dark' : 'default'`) with light vs dark `themeVariables` and responsive card borders.
+       - **Simulators Hub (`SimulatorsHubPage.tsx`)**: Converted all 4 simulation suites (Capacity Calculator, Consistent Hashing Ring Visualizer, Token Bucket Rate Limiter, Circuit Breaker, LRU Cache Eviction, Bloom Filter) to light/dark mode.
+       - **Candidate Dashboard (`DashboardPage.tsx`)**: Converted KPI metrics, readiness gauges, skill radar, study velocity, and AI roadmap cards to light/dark mode.
+       - **Admin & Monetization Control (`AdminDashboardPage.tsx`)**: Converted system metrics, AI token consumption chart, tier matrix, and candidate management table to light/dark mode.
+       - **User Profile & Auth (`ProfilePage.tsx`, `LoginPage.tsx`, `RegisterPage.tsx`)**: Converted profile form, readiness metrics, and authentication cards to light/dark mode.
+  3. **Verification & Testing**:
+     - Vitest suite passed: 5/5 tests passing (`npm --prefix frontend test`).
+     - Vite production bundle built cleanly with zero compilation errors (`npm --prefix frontend run build`).
+     - Containerized Docker deployment recreated and healthy (`sysdesign-frontend` up on port 3000).
+     - Headless Chrome CDP live automated verification confirmed:
+       - Every navigation item has `whiteSpace: nowrap` and exact $32\text{px}/34\text{px}$ single-line height on desktop.
+       - "More" dropdown opens cleanly with secondary practice modules.
+       - Theme toggle seamlessly switches `document.documentElement` between light and dark modes with high contrast readability.
+       - Captured verification screenshots for topics and designer in light mode.
+- **Frontend**: `frontend/src/App.tsx`, `frontend/src/components/common/MermaidViewer.tsx`, `frontend/src/pages/admin/AdminDashboardPage.tsx`, `frontend/src/pages/auth/LoginPage.tsx`, `frontend/src/pages/auth/RegisterPage.tsx`, `frontend/src/pages/curriculum/CurriculumListPage.tsx`, `frontend/src/pages/curriculum/TopicDetailPage.tsx`, `frontend/src/pages/dashboard/DashboardPage.tsx`, `frontend/src/pages/interview/InterviewHistoryPage.tsx`, `frontend/src/pages/interview/InterviewPage.tsx`, `frontend/src/pages/practice/HldDetailPage.tsx`, `frontend/src/pages/practice/HldListPage.tsx`, `frontend/src/pages/practice/LldDetailPage.tsx`, `frontend/src/pages/practice/LldListPage.tsx`, `frontend/src/pages/practice/QuestionBankPage.tsx`, `frontend/src/pages/profile/ProfilePage.tsx`, `frontend/src/pages/simulators/SimulatorsHubPage.tsx`.
+- **Commit**: `5524fe4` (pushed to `origin main`).
 - **Status**: COMPLETED
