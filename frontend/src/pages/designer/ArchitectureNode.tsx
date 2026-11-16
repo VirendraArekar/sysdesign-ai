@@ -32,15 +32,15 @@ export interface ArchitectureNodeData {
 }
 
 const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string; icon: React.ElementType }> = {
-  client: { bg: 'bg-[#06B6D4]/10', border: 'border-[#06B6D4]/40', text: 'text-[#06B6D4]', icon: Smartphone },
-  cdn: { bg: 'bg-[#6366F1]/10', border: 'border-[#6366F1]/40', text: 'text-[#6366F1]', icon: Globe },
-  load_balancer: { bg: 'bg-[#8B5CF6]/10', border: 'border-[#8B5CF6]/40', text: 'text-[#8B5CF6]', icon: Network },
-  compute: { bg: 'bg-[#3B82F6]/10', border: 'border-[#3B82F6]/40', text: 'text-[#3B82F6]', icon: Cpu },
-  cache: { bg: 'bg-[#10B981]/10', border: 'border-[#10B981]/40', text: 'text-[#10B981]', icon: Layers },
-  messaging: { bg: 'bg-[#F59E0B]/10', border: 'border-[#F59E0B]/40', text: 'text-[#F59E0B]', icon: Radio },
-  database: { bg: 'bg-[#F43F5E]/10', border: 'border-[#F43F5E]/40', text: 'text-[#F43F5E]', icon: Database },
-  storage: { bg: 'bg-[#F97316]/10', border: 'border-[#F97316]/40', text: 'text-[#F97316]', icon: HardDrive },
-  security: { bg: 'bg-[#EF4444]/10', border: 'border-[#EF4444]/40', text: 'text-[#EF4444]', icon: ShieldCheck },
+  client: { bg: 'bg-[#06B6D4]/15 dark:bg-[#06B6D4]/10', border: 'border-[#06B6D4]/40', text: 'text-cyan-700 dark:text-[#06B6D4]', icon: Smartphone },
+  cdn: { bg: 'bg-[#6366F1]/15 dark:bg-[#6366F1]/10', border: 'border-[#6366F1]/40', text: 'text-indigo-700 dark:text-[#6366F1]', icon: Globe },
+  load_balancer: { bg: 'bg-[#8B5CF6]/15 dark:bg-[#8B5CF6]/10', border: 'border-[#8B5CF6]/40', text: 'text-purple-700 dark:text-[#8B5CF6]', icon: Network },
+  compute: { bg: 'bg-[#3B82F6]/15 dark:bg-[#3B82F6]/10', border: 'border-[#3B82F6]/40', text: 'text-blue-700 dark:text-[#3B82F6]', icon: Cpu },
+  cache: { bg: 'bg-[#10B981]/15 dark:bg-[#10B981]/10', border: 'border-[#10B981]/40', text: 'text-emerald-700 dark:text-[#10B981]', icon: Layers },
+  messaging: { bg: 'bg-[#F59E0B]/15 dark:bg-[#F59E0B]/10', border: 'border-[#F59E0B]/40', text: 'text-amber-700 dark:text-[#F59E0B]', icon: Radio },
+  database: { bg: 'bg-[#F43F5E]/15 dark:bg-[#F43F5E]/10', border: 'border-[#F43F5E]/40', text: 'text-rose-700 dark:text-[#F43F5E]', icon: Database },
+  storage: { bg: 'bg-[#F97316]/15 dark:bg-[#F97316]/10', border: 'border-[#F97316]/40', text: 'text-orange-700 dark:text-[#F97316]', icon: HardDrive },
+  security: { bg: 'bg-[#EF4444]/15 dark:bg-[#EF4444]/10', border: 'border-[#EF4444]/40', text: 'text-red-700 dark:text-[#EF4444]', icon: ShieldCheck },
 };
 
 export const ArchitectureNode: React.FC<NodeProps> = ({ data, selected }) => {
@@ -53,14 +53,14 @@ export const ArchitectureNode: React.FC<NodeProps> = ({ data, selected }) => {
   const isTraffic = nodeData.isSimulatingTraffic;
 
   return (
-    <div className={`relative px-4 py-3 rounded-xl min-w-[210px] bg-[#151C2E] border-2 transition-all shadow-xl backdrop-blur-md ${
+    <div className={`relative px-4 py-3 rounded-xl min-w-[210px] bg-white dark:bg-[#151C2E] border-2 transition-all shadow-xl backdrop-blur-md ${
       isWalkthrough
         ? 'border-amber-400 shadow-2xl shadow-amber-400/50 ring-4 ring-amber-400/60 scale-105 z-30'
         : selected 
           ? 'border-[#6366F1] shadow-[#6366F1]/25 ring-2 ring-[#6366F1]/30' 
           : isTraffic
-            ? 'border-cyan-400/80 shadow-lg shadow-cyan-400/25 ring-2 ring-cyan-400/30'
-            : `${style.border} hover:border-slate-500`
+            ? 'border-cyan-500 dark:border-cyan-400/80 shadow-lg shadow-cyan-400/25 ring-2 ring-cyan-400/30'
+            : `${style.border} hover:border-slate-400 dark:hover:border-slate-500`
     }`}>
       {/* Walkthrough Step Badge */}
       {isWalkthrough && nodeData.stepBadge && (
@@ -72,8 +72,8 @@ export const ArchitectureNode: React.FC<NodeProps> = ({ data, selected }) => {
 
       {/* Traffic Pulse Badge */}
       {isTraffic && !isWalkthrough && (
-        <div className="absolute -top-2.5 -right-2 px-1.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 font-mono text-[9px] flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+        <div className="absolute -top-2.5 -right-2 px-1.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-400/50 text-cyan-700 dark:text-cyan-300 font-mono text-[9px] flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping" />
           <span>Active</span>
         </div>
       )}
@@ -82,41 +82,41 @@ export const ArchitectureNode: React.FC<NodeProps> = ({ data, selected }) => {
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="!w-3 !h-3 !bg-[#6366F1] !border-2 !border-[#0B1020]" 
+        className="!w-3 !h-3 !bg-[#6366F1] !border-2 !border-white dark:!border-[#0B1020]" 
       />
       <Handle 
         type="target" 
         position={Position.Left} 
-        className="!w-3 !h-3 !bg-[#6366F1] !border-2 !border-[#0B1020]" 
+        className="!w-3 !h-3 !bg-[#6366F1] !border-2 !border-white dark:!border-[#0B1020]" 
       />
       <Handle 
         type="source" 
         position={Position.Right} 
-        className="!w-3 !h-3 !bg-[#06B6D4] !border-2 !border-[#0B1020]" 
+        className="!w-3 !h-3 !bg-[#06B6D4] !border-2 !border-white dark:!border-[#0B1020]" 
       />
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="!w-3 !h-3 !bg-[#06B6D4] !border-2 !border-[#0B1020]" 
+        className="!w-3 !h-3 !bg-[#06B6D4] !border-2 !border-white dark:!border-[#0B1020]" 
       />
 
       {/* Header bar */}
-      <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-[#1E293B]">
+      <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-[#1E293B]">
         <div className="flex items-center gap-1.5">
           <div className={`p-1.5 rounded-lg ${style.bg} ${style.text}`}>
             <IconComponent className="w-4 h-4" />
           </div>
-          <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-400">
+          <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">
             {category.replace('_', ' ')}
           </span>
         </div>
 
         {nodeData.hasSpof ? (
-          <span title="Single Point of Failure Warning" className="text-amber-400 flex items-center">
+          <span title="Single Point of Failure Warning" className="text-amber-500 dark:text-amber-400 flex items-center">
             <AlertTriangle className="w-3.5 h-3.5 animate-pulse" />
           </span>
         ) : (
-          <span className="text-emerald-400 flex items-center">
+          <span className="text-emerald-500 dark:text-emerald-400 flex items-center">
             <CheckCircle2 className="w-3.5 h-3.5" />
           </span>
         )}
@@ -124,11 +124,11 @@ export const ArchitectureNode: React.FC<NodeProps> = ({ data, selected }) => {
 
       {/* Label & Tech Stack */}
       <div>
-        <div className="font-semibold text-sm text-white tracking-tight leading-snug">
+        <div className="font-semibold text-sm text-slate-900 dark:text-white tracking-tight leading-snug">
           {nodeData.label}
         </div>
         {nodeData.techStack && (
-          <div className="text-xs text-slate-400 mt-0.5 truncate">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
             {nodeData.techStack}
           </div>
         )}
@@ -136,21 +136,21 @@ export const ArchitectureNode: React.FC<NodeProps> = ({ data, selected }) => {
 
       {/* Metrics Footer */}
       {(nodeData.qps || nodeData.replicas || isTraffic) && (
-        <div className="flex items-center justify-between gap-1.5 mt-2.5 pt-2 border-t border-[#1E293B]/70 text-[10px] text-slate-300">
+        <div className="flex items-center justify-between gap-1.5 mt-2.5 pt-2 border-t border-slate-100 dark:border-[#1E293B]/70 text-[10px] text-slate-600 dark:text-slate-300">
           {isTraffic ? (
-            <span className="px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 font-mono text-cyan-300 flex items-center gap-1">
-              <Zap className="w-2.5 h-2.5 text-cyan-400" />
+            <span className="px-1.5 py-0.5 rounded bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-300 dark:border-cyan-500/30 font-mono text-cyan-700 dark:text-cyan-300 flex items-center gap-1">
+              <Zap className="w-2.5 h-2.5 text-cyan-500 dark:text-cyan-400" />
               {nodeData.qps || '35k QPS'}
             </span>
           ) : (
             nodeData.qps && (
-              <span className="px-1.5 py-0.5 rounded bg-[#1E293B] font-mono text-[#06B6D4]">
+              <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1E293B] font-mono text-cyan-700 dark:text-[#06B6D4]">
                 {nodeData.qps}
               </span>
             )
           )}
           {nodeData.replicas && (
-            <span className="px-1.5 py-0.5 rounded bg-[#1E293B] font-mono text-[#A78BFA]">
+            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1E293B] font-mono text-indigo-700 dark:text-[#A78BFA]">
               {nodeData.replicas}
             </span>
           )}

@@ -17,6 +17,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import ArchitectureNode, { ArchitectureNodeData } from './ArchitectureNode';
+import { useTheme } from '../../context/ThemeContext';
 import axios from 'axios';
 import { 
   Bot, 
@@ -59,7 +60,8 @@ import {
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
-  ExternalLink
+  ExternalLink,
+  X
 } from 'lucide-react';
 
 const API_BASE = '/api/v1';
@@ -188,6 +190,8 @@ const DEFAULT_WALKTHROUGH_STEPS: WalkthroughStep[] = [
 const ArchitectureDesignerCanvas: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition, fitView } = useReactFlow();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   const [nodes, setNodes, onNodesChange] = useNodesState(INITIAL_NODES);
   const [edges, setEdges, onEdgesChange] = useEdgesState(INITIAL_EDGES);
@@ -195,8 +199,16 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inspector' | 'audit' | 'generate' | 'walkthrough' | 'explain'>('audit');
 
   // Responsive Drawer Visibility
-  const [showLibrary, setShowLibrary] = useState(true);
-  const [showDrawer, setShowDrawer] = useState(true);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
+
+  // Auto-open library on desktop on mount
+  useEffect(() => {
+    if (window.innerWidth >= 1024) {
+      setShowLibrary(true);
+      setShowDrawer(true);
+    }
+  }, []);
 
   // Diagram metadata
   const [diagramTitle, setDiagramTitle] = useState('Production Microservices Topology');
@@ -216,8 +228,6 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   const [isExplaining, setIsExplaining] = useState(false);
   const [explanationData, setExplanationData] = useState<any>(null);
   const [copiedPitch, setCopiedPitch] = useState(false);
-  const [presentationSlide, setPresentationSlide] = useState(0);
-  const [isFullScreenPresentation, setIsFullScreenPresentation] = useState(false);
 
   // AI Audit State
   const [isAuditing, setIsAuditing] = useState(false);
@@ -254,7 +264,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
         animated: isSimulatingTraffic || e.animated,
         style: {
           ...e.style,
-          stroke: isSimulatingTraffic ? '#06B6D4' : '#6366F1',
+          stroke: isSimulatingTraffic ? '#06B6D4' : (isDark ? '#6366F1' : '#4F46E5'),
           strokeWidth: isSimulatingTraffic ? (trafficRate === 'surge' ? 4 : 3) : 2,
           filter: isSimulatingTraffic ? 'drop-shadow(0 0 6px #06B6D4)' : undefined
         }
@@ -273,7 +283,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
         }
       }))
     );
-  }, [isSimulatingTraffic, trafficRate, setEdges, setNodes]);
+  }, [isSimulatingTraffic, trafficRate, isDark, setEdges, setNodes]);
 
   // Handle Walkthrough Step progression
   useEffect(() => {
@@ -331,38 +341,36 @@ const ArchitectureDesignerCanvas: React.FC = () => {
       ...params, 
       animated: true, 
       markerEnd: { type: MarkerType.ArrowClosed },
-      style: { stroke: isSimulatingTraffic ? '#06B6D4' : '#6366F1', strokeWidth: 2 }
+      style: { stroke: isSimulatingTraffic ? '#06B6D4' : (isDark ? '#6366F1' : '#4F46E5'), strokeWidth: 2 }
     }, eds)),
-    [setEdges, isSimulatingTraffic]
+    [setEdges, isSimulatingTraffic, isDark]
   );
 
   const onNodeClick = (_: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
     setActiveTab('inspector');
-    if (!showDrawer) setShowDrawer(true);
+    setShowDrawer(true);
   };
 
   const onPaneClick = () => {
     setSelectedNode(null);
   };
 
-  // Drag and Drop implementation
+  // Drag and Drop state & handlers
   const [isDragOver, setIsDragOver] = useState(false);
 
   const onDragStart = (
     event: React.DragEvent,
-    nodeData: { category: ArchitectureNodeData['category']; defaultLabel: string; defaultTech: string }
+    category: ArchitectureNodeData['category'],
+    defaultLabel: string,
+    defaultTech: string
   ) => {
-    globalDraggedNode = nodeData;
-    const serialized = JSON.stringify(nodeData);
+    const payload = JSON.stringify({ category, defaultLabel, defaultTech });
+    globalDraggedNode = { category, defaultLabel, defaultTech };
     try {
-      event.dataTransfer.setData('application/reactflow', serialized);
-    } catch (_) {}
-    try {
-      event.dataTransfer.setData('text/plain', serialized);
-    } catch (_) {}
-    try {
-      event.dataTransfer.setData('text', serialized);
+      event.dataTransfer.setData('application/reactflow', payload);
+      event.dataTransfer.setData('text/plain', payload);
+      event.dataTransfer.setData('text', payload);
     } catch (_) {}
     event.dataTransfer.effectAllowed = 'move';
   };
@@ -376,7 +384,6 @@ const ArchitectureDesignerCanvas: React.FC = () => {
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    event.stopPropagation();
     event.dataTransfer.dropEffect = 'move';
     setIsDragOver(true);
   }, []);
@@ -392,12 +399,10 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      event.stopPropagation();
       setIsDragOver(false);
 
       let parsedData: { category: ArchitectureNodeData['category']; defaultLabel: string; defaultTech: string } | null = null;
 
-      // 1. Try reading from dataTransfer
       try {
         const rawData =
           event.dataTransfer.getData('application/reactflow') ||
@@ -411,7 +416,6 @@ const ArchitectureDesignerCanvas: React.FC = () => {
         console.warn('Could not parse dataTransfer text payload', err);
       }
 
-      // 2. Memory fallback for WebKit / Safari or browsers that restrict dataTransfer
       if (!parsedData && globalDraggedNode) {
         parsedData = globalDraggedNode;
       }
@@ -460,21 +464,34 @@ const ArchitectureDesignerCanvas: React.FC = () => {
         setNodes((nds) => [...nds, newNode]);
         setSelectedNode(newNode);
         setActiveTab('inspector');
-        if (!showDrawer) setShowDrawer(true);
+        setShowDrawer(true);
       } catch (err) {
         console.error('Failed to create dropped node', err);
       }
     },
-    [screenToFlowPosition, setNodes, isSimulatingTraffic, showDrawer]
+    [screenToFlowPosition, setNodes, isSimulatingTraffic]
   );
 
-  // Click to Add fallback
+  // Click / Tap to Add (Guaranteed reliable on mobile/tablets and desktop)
   const addNode = (category: ArchitectureNodeData['category'], defaultLabel: string, defaultTech: string) => {
+    const wrapperBounds = reactFlowWrapper.current?.getBoundingClientRect();
+    let position = { x: 350 + Math.random() * 150, y: 180 + Math.random() * 120 };
+
+    if (wrapperBounds) {
+      const centerPos = screenToFlowPosition({
+        x: wrapperBounds.left + wrapperBounds.width / 2 + (Math.random() - 0.5) * 80,
+        y: wrapperBounds.top + wrapperBounds.height / 2 + (Math.random() - 0.5) * 80
+      });
+      if (centerPos && !isNaN(centerPos.x) && !isNaN(centerPos.y)) {
+        position = centerPos;
+      }
+    }
+
     const id = `${category}-${Date.now()}`;
     const newNode: Node = {
       id,
       type: 'archNode',
-      position: { x: 300 + Math.random() * 250, y: 150 + Math.random() * 180 },
+      position,
       data: {
         label: defaultLabel,
         category,
@@ -487,7 +504,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
     setNodes((nds) => [...nds, newNode]);
     setSelectedNode(newNode);
     setActiveTab('inspector');
-    if (!showDrawer) setShowDrawer(true);
+    setShowDrawer(true);
   };
 
   // Update selected node data
@@ -541,7 +558,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   const handleRunAudit = async () => {
     setIsAuditing(true);
     setActiveTab('audit');
-    if (!showDrawer) setShowDrawer(true);
+    setShowDrawer(true);
     try {
       const payload = {
         title: diagramTitle,
@@ -597,7 +614,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   const handleRunExplain = async () => {
     setIsExplaining(true);
     setActiveTab('explain');
-    if (!showDrawer) setShowDrawer(true);
+    setShowDrawer(true);
     try {
       const payload = {
         title: diagramTitle,
@@ -615,7 +632,6 @@ const ArchitectureDesignerCanvas: React.FC = () => {
       }
     } catch (err) {
       console.error('Explain API fallback', err);
-      // Deterministic client fallback if offline
       setExplanationData({
         elevatorPitch: `This architecture for ${diagramTitle} is engineered to reliably sustain ${genScale} with sub-25ms p99 latency targets. User traffic is accelerated at the edge through Anycast DNS and CDN caching, absorbing up to 80% of read traffic. Behind our L7 gateway, stateless Spring Boot microservices scale horizontally, leveraging a Cache-Aside Redis cluster for sub-2ms lookups backed by multi-AZ PostgreSQL with read replicas.`,
         stepByStepFlow: DEFAULT_WALKTHROUGH_STEPS,
@@ -717,20 +733,20 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] overflow-hidden bg-[#0B1020]">
+    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] overflow-hidden bg-slate-100 dark:bg-[#0B1020] text-slate-900 dark:text-white transition-colors duration-200">
       {/* Top Action Bar */}
-      <div className="h-14 border-b border-[#1E293B] bg-[#151C2E] px-3 sm:px-4 flex items-center justify-between z-10 gap-2">
+      <div className="h-14 border-b border-slate-200 dark:border-[#1E293B] bg-white dark:bg-[#151C2E] px-3 sm:px-4 flex items-center justify-between z-10 gap-2 shadow-xs">
         {/* Left: Title & Drawer Toggles */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={() => setShowLibrary(!showLibrary)}
-            className="p-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-slate-300 transition-colors"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             title={showLibrary ? 'Hide Component Library' : 'Show Component Library'}
           >
-            {showLibrary ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4 text-[#06B6D4]" />}
+            {showLibrary ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4 text-cyan-600 dark:text-[#06B6D4]" />}
           </button>
 
-          <div className="p-1.5 rounded-lg bg-[#6366F1]/10 text-[#6366F1] hidden sm:block">
+          <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-[#6366F1]/10 text-indigo-600 dark:text-[#6366F1] hidden sm:block">
             <Network className="w-5 h-5" />
           </div>
 
@@ -739,29 +755,29 @@ const ArchitectureDesignerCanvas: React.FC = () => {
               type="text"
               value={diagramTitle}
               onChange={(e) => setDiagramTitle(e.target.value)}
-              className="bg-transparent font-semibold text-xs sm:text-sm text-white focus:outline-none focus:border-b focus:border-[#6366F1] truncate max-w-[140px] sm:max-w-xs"
+              className="bg-transparent font-semibold text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:border-b focus:border-indigo-500 truncate max-w-[120px] sm:max-w-xs"
               title="Click to rename diagram"
             />
-            <div className="text-[10px] text-slate-400 hidden sm:block">
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:block">
               {nodes.length} Components • {edges.length} Connections
             </div>
           </div>
         </div>
 
         {/* Center / Right: Interactive Simulation & Pitch Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
           {/* Traffic Simulation Toggle */}
           <button
             onClick={() => setIsSimulatingTraffic(!isSimulatingTraffic)}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
               isSimulatingTraffic
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-md shadow-cyan-500/20'
-                : 'bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-slate-300'
+                ? 'bg-cyan-50 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-400/50 shadow-md shadow-cyan-500/20'
+                : 'bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-slate-700 dark:text-slate-300'
             }`}
             title="Simulate Real-time Network Traffic Flow on Edges"
           >
-            <Zap className={`w-3.5 h-3.5 ${isSimulatingTraffic ? 'text-cyan-400 animate-pulse' : 'text-slate-400'}`} />
-            <span className="hidden md:inline">Traffic Flow:</span>
+            <Zap className={`w-3.5 h-3.5 ${isSimulatingTraffic ? 'text-cyan-500 animate-pulse' : 'text-slate-400'}`} />
+            <span className="hidden md:inline">Traffic:</span>
             <span>{isSimulatingTraffic ? 'ACTIVE' : 'OFF'}</span>
           </button>
 
@@ -770,16 +786,16 @@ const ArchitectureDesignerCanvas: React.FC = () => {
             onClick={() => {
               setIsWalkthroughActive(true);
               setActiveTab('walkthrough');
-              if (!showDrawer) setShowDrawer(true);
+              setShowDrawer(true);
             }}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'walkthrough' && isWalkthroughActive
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
-                : 'bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-slate-300'
+                ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-400/50'
+                : 'bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-slate-700 dark:text-slate-300'
             }`}
             title="Interactive Step-by-Step Request Lifecycle Walkthrough"
           >
-            <Play className="w-3.5 h-3.5 text-amber-400 fill-current" />
+            <Play className="w-3.5 h-3.5 text-amber-500 fill-current" />
             <span className="hidden sm:inline">How It Works</span>
           </button>
 
@@ -787,7 +803,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
           <button
             onClick={handleRunExplain}
             disabled={isExplaining}
-            className="px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white text-xs font-semibold shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all disabled:opacity-50"
+            className="px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white text-xs font-semibold shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer whitespace-nowrap"
             title="Generate FAANG Interviewer Presentation Script"
           >
             <Volume2 className="w-3.5 h-3.5 text-emerald-200" />
@@ -799,9 +815,9 @@ const ArchitectureDesignerCanvas: React.FC = () => {
           <button
             onClick={handleRunAudit}
             disabled={isAuditing}
-            className="px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#6366F1] to-[#4F46E5] hover:opacity-95 text-white text-xs font-semibold shadow-md shadow-[#6366F1]/20 flex items-center gap-1.5 transition-all disabled:opacity-50"
+            className="px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#6366F1] to-[#4F46E5] hover:opacity-95 text-white text-xs font-semibold shadow-md shadow-[#6366F1]/20 flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer whitespace-nowrap"
           >
-            <Bot className="w-3.5 h-3.5 text-[#06B6D4]" />
+            <Bot className="w-3.5 h-3.5 text-cyan-300" />
             <span className="hidden sm:inline">{isAuditing ? 'Auditing...' : 'AI Audit'}</span>
           </button>
 
@@ -812,7 +828,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                 const selected = templates.find((t) => t.title === e.target.value);
                 if (selected) loadTemplate(selected);
               }}
-              className="px-2.5 py-1.5 rounded-lg bg-[#1E293B] border border-[#334155] text-xs font-medium text-slate-300 focus:outline-none hover:bg-[#334155] transition-all cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none hover:bg-slate-200 dark:hover:bg-[#334155] transition-all cursor-pointer"
               defaultValue=""
             >
               <option value="" disabled>Blueprints...</option>
@@ -824,7 +840,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
 
           <button
             onClick={exportJson}
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] border border-[#334155] text-xs text-slate-300 flex items-center gap-1 transition-all"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] border border-slate-200 dark:border-[#334155] text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1 transition-all cursor-pointer"
             title="Export Architecture JSON"
           >
             <Download className="w-3.5 h-3.5" />
@@ -833,30 +849,50 @@ const ArchitectureDesignerCanvas: React.FC = () => {
 
           <button
             onClick={() => setShowDrawer(!showDrawer)}
-            className="p-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-slate-300 transition-colors"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             title={showDrawer ? 'Hide Inspector Drawer' : 'Show Inspector Drawer'}
           >
-            {showDrawer ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4 text-[#A78BFA]" />}
+            {showDrawer ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4 text-indigo-500 dark:text-[#A78BFA]" />}
           </button>
         </div>
       </div>
 
       {/* Main Workspace: Left Palette + Canvas + Right Inspector/Audit Drawer */}
       <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Backdrop Overlay for Drawers */}
+        {(showLibrary || showDrawer) && (
+          <div
+            onClick={() => {
+              setShowLibrary(false);
+              setShowDrawer(false);
+            }}
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-xs transition-opacity"
+          />
+        )}
+
         {/* Left Component Tray (Responsive Drawer) */}
         {showLibrary && (
-          <aside className="w-60 border-r border-[#1E293B] bg-[#151C2E]/95 p-3 flex flex-col gap-2 overflow-y-auto z-20 backdrop-blur-md absolute lg:relative h-full shadow-2xl lg:shadow-none">
-            <div className="flex items-center justify-between pb-1 border-b border-[#1E293B]">
-              <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
-                Component Library
+          <aside className="w-72 lg:w-64 border-r border-slate-200 dark:border-[#1E293B] bg-slate-50 dark:bg-[#151C2E] p-3 flex flex-col gap-2 overflow-y-auto z-40 fixed lg:relative inset-y-0 left-0 h-full shadow-2xl lg:shadow-none">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-[#1E293B]">
+              <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#6366F1]" />
+                <span>Component Library</span>
               </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1E293B] text-[#06B6D4] font-mono">
-                Drag & Drop
-              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-cyan-700 dark:text-[#06B6D4] font-mono">
+                  Drag / Tap
+                </span>
+                <button
+                  onClick={() => setShowLibrary(false)}
+                  className="lg:hidden p-1 rounded-md text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="text-[11px] text-slate-400 bg-[#1E293B]/50 p-2 rounded-lg border border-[#334155]/40">
-              Drag components directly onto the canvas, or click to add.
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-[#1E293B]/50 p-2 rounded-lg border border-slate-200 dark:border-[#334155]/40 shadow-xs">
+              Drag components onto the canvas, or tap/click <Plus className="w-3 h-3 inline text-indigo-500" /> to add to center.
             </div>
 
             {[
@@ -875,24 +911,24 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                 <div
                   key={idx}
                   draggable
-                  onDragStart={(e) => onDragStart(e, { category: item.category as any, defaultLabel: item.label, defaultTech: item.tech })}
+                  onDragStart={(e) => onDragStart(e, item.category as any, item.label, item.tech)}
                   onDragEnd={onDragEnd}
                   onClick={() => addNode(item.category as any, item.label, item.tech)}
-                  className="w-full p-2.5 rounded-xl bg-[#1E293B]/80 hover:bg-[#1E293B] border border-[#334155]/60 hover:border-[#6366F1] cursor-grab active:cursor-grabbing text-left flex items-center justify-between transition-all group shadow-sm select-none"
-                  title="Drag and drop onto canvas, or click to add"
+                  className="w-full p-2.5 rounded-xl bg-white dark:bg-[#1E293B]/80 hover:bg-slate-100 dark:hover:bg-[#1E293B] border border-slate-200 dark:border-[#334155]/60 hover:border-[#6366F1] cursor-grab active:cursor-grabbing text-left flex items-center justify-between transition-all group shadow-xs select-none"
+                  title="Drag onto canvas or tap to add"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 pointer-events-none select-none">
                     <div 
                       className="p-1.5 rounded-lg transition-transform group-hover:scale-110 flex-shrink-0"
-                      style={{ backgroundColor: `${item.color}15`, color: item.color }}
+                      style={{ backgroundColor: `${item.color}18`, color: item.color }}
                     >
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-semibold text-slate-200 group-hover:text-white truncate">
+                      <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white truncate">
                         {item.sub}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                         {item.tech}
                       </div>
                     </div>
@@ -904,19 +940,19 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                         e.stopPropagation();
                         addNode(item.category as any, item.label, item.tech);
                       }}
-                      className="p-1 rounded-md hover:bg-[#334155] text-slate-400 hover:text-white transition-colors"
+                      className="p-1 rounded-md bg-slate-100 dark:bg-[#334155]/60 hover:bg-indigo-100 dark:hover:bg-[#334155] text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer pointer-events-auto"
                       title="Click to add to canvas"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
-                    <GripVertical className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 flex-shrink-0 cursor-grab" />
+                    <GripVertical className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 flex-shrink-0 cursor-grab pointer-events-none" />
                   </div>
                 </div>
               );
             })}
 
-            <div className="mt-auto p-3 rounded-xl bg-[#1E293B]/50 border border-[#334155]/50 text-[11px] text-slate-400">
-              <span className="font-semibold text-slate-300">💡 Tip:</span> Drag components onto canvas or click <Plus className="w-3 h-3 inline text-[#06B6D4]" /> to add directly.
+            <div className="mt-auto p-3 rounded-xl bg-white dark:bg-[#1E293B]/50 border border-slate-200 dark:border-[#334155]/50 text-[11px] text-slate-500 dark:text-slate-400 shadow-xs">
+              <span className="font-semibold text-slate-800 dark:text-slate-300">💡 Pro-Tip:</span> Connect any two components by dragging between node anchor handles.
             </div>
           </aside>
         )}
@@ -927,13 +963,12 @@ const ArchitectureDesignerCanvas: React.FC = () => {
           className="flex-1 h-full relative"
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
-          onDrop={onDrop}
         >
           {/* Active Drop Indicator Overlay */}
           {isDragOver && (
-            <div className="absolute inset-0 pointer-events-none z-30 border-2 border-dashed border-[#06B6D4] bg-[#06B6D4]/5 backdrop-blur-[1px] flex items-center justify-center">
-              <div className="px-4 py-2.5 rounded-xl bg-[#151C2E]/95 border border-[#06B6D4]/60 shadow-2xl text-xs font-semibold text-[#06B6D4] flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
+            <div className="absolute inset-0 pointer-events-none z-30 border-2 border-dashed border-[#06B6D4] bg-[#06B6D4]/10 backdrop-blur-[1px] flex items-center justify-center">
+              <div className="px-4 py-2.5 rounded-xl bg-white/95 dark:bg-[#151C2E]/95 border border-[#06B6D4]/60 shadow-2xl text-xs font-semibold text-cyan-600 dark:text-[#06B6D4] flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-cyan-500 animate-spin" />
                 Drop component here to place on canvas
               </div>
             </div>
@@ -951,33 +986,38 @@ const ArchitectureDesignerCanvas: React.FC = () => {
             onDrop={onDrop}
             nodeTypes={nodeTypes}
             fitView
-            className="bg-[#0B1020]"
+            className={isDark ? 'bg-[#0B1020]' : 'bg-slate-100'}
           >
-            <Background color="#1E293B" gap={20} size={1.5} variant={BackgroundVariant.Dots} />
-            <Controls className="!bg-[#151C2E] !border-[#1E293B] !rounded-xl !text-white overflow-hidden shadow-xl" />
+            <Background 
+              color={isDark ? '#1E293B' : '#cbd5e1'} 
+              gap={20} 
+              size={1.5} 
+              variant={BackgroundVariant.Dots} 
+            />
+            <Controls className="!bg-white dark:!bg-[#151C2E] !border-slate-300 dark:!border-[#1E293B] !text-slate-800 dark:!text-white !rounded-xl overflow-hidden shadow-xl" />
             <MiniMap 
               nodeColor="#6366F1"
-              maskColor="rgba(11, 16, 32, 0.7)"
-              className="!bg-[#151C2E] !border-[#1E293B] !rounded-xl overflow-hidden shadow-2xl hidden md:block" 
+              maskColor={isDark ? 'rgba(11, 16, 32, 0.7)' : 'rgba(241, 245, 249, 0.7)'}
+              className="!bg-white dark:!bg-[#151C2E] !border-slate-300 dark:!border-[#1E293B] !rounded-xl overflow-hidden shadow-2xl hidden md:block" 
             />
           </ReactFlow>
 
           {/* Floating Traffic Simulation HUD Badge */}
           {isSimulatingTraffic && (
-            <div className="absolute top-4 left-4 z-10 px-3 py-2 rounded-xl bg-[#151C2E]/90 border border-cyan-500/40 backdrop-blur-md shadow-2xl flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-cyan-300 text-xs font-semibold">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
-                <span>Simulated Traffic Load:</span>
+            <div className="absolute top-4 left-4 z-10 px-3 py-2 rounded-xl bg-white/90 dark:bg-[#151C2E]/90 border border-cyan-400 dark:border-cyan-500/40 backdrop-blur-md shadow-2xl flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-cyan-700 dark:text-cyan-300 text-xs font-semibold">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-ping" />
+                <span>Simulated Traffic:</span>
               </div>
               <div className="flex items-center gap-1">
                 {(['normal', 'high', 'surge'] as const).map((rate) => (
                   <button
                     key={rate}
                     onClick={() => setTrafficRate(rate)}
-                    className={`px-2 py-0.5 rounded text-[11px] font-mono uppercase transition-all ${
+                    className={`px-2 py-0.5 rounded text-[11px] font-mono uppercase transition-all cursor-pointer ${
                       trafficRate === rate
-                        ? 'bg-cyan-500 text-black font-bold'
-                        : 'bg-[#1E293B] text-slate-400 hover:text-white'
+                        ? 'bg-cyan-500 text-slate-950 font-bold'
+                        : 'bg-slate-100 dark:bg-[#1E293B] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     {rate}
@@ -987,40 +1027,66 @@ const ArchitectureDesignerCanvas: React.FC = () => {
             </div>
           )}
 
+          {/* Mobile Quick Action Pill Bar */}
+          <div className="lg:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 dark:bg-[#151C2E]/95 border border-slate-200 dark:border-[#1E293B] shadow-2xl backdrop-blur-md">
+            <button
+              onClick={() => setShowLibrary(!showLibrary)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                showLibrary
+                  ? 'bg-[#6366F1] text-white shadow-md'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Components</span>
+            </button>
+            <button
+              onClick={() => setShowDrawer(!showDrawer)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                showDrawer
+                  ? 'bg-[#06B6D4] text-black shadow-md font-bold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E293B]'
+              }`}
+            >
+              <Bot className="w-3.5 h-3.5" />
+              <span>Inspector</span>
+            </button>
+          </div>
+
           {/* Floating Walkthrough Controller Overlay */}
           {isWalkthroughActive && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-11/12 max-w-xl p-3 sm:p-4 rounded-2xl bg-[#151C2E]/95 border-2 border-amber-500/50 backdrop-blur-xl shadow-2xl space-y-2">
+            <div className="absolute bottom-16 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 w-[94%] max-w-xl p-3 sm:p-4 rounded-2xl bg-white/95 dark:bg-[#151C2E]/95 border-2 border-amber-400 dark:border-amber-500/50 backdrop-blur-xl shadow-2xl space-y-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-black text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-black text-xs shrink-0">
                     Step {walkthroughSteps[currentStepIndex]?.stepNumber || 1} of {walkthroughSteps.length}
                   </span>
-                  <span className="text-xs font-bold text-white truncate max-w-xs">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                     {walkthroughSteps[currentStepIndex]?.component}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => setCurrentStepIndex((p) => Math.max(0, p - 1))}
                     disabled={currentStepIndex === 0}
-                    className="p-1 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-slate-300 disabled:opacity-40"
+                    className="p-1 rounded-lg bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
 
                   <button
                     onClick={() => setIsPlayingWalkthrough(!isPlayingWalkthrough)}
-                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1 cursor-pointer"
                   >
                     {isPlayingWalkthrough ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                    <span>{isPlayingWalkthrough ? 'Pause' : 'Auto-Play'}</span>
+                    <span>{isPlayingWalkthrough ? 'Pause' : 'Auto'}</span>
                   </button>
 
                   <button
                     onClick={() => setCurrentStepIndex((p) => Math.min(walkthroughSteps.length - 1, p + 1))}
                     disabled={currentStepIndex >= walkthroughSteps.length - 1}
-                    className="p-1 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-slate-300 disabled:opacity-40"
+                    className="p-1 rounded-lg bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -1031,21 +1097,21 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                       setIsPlayingWalkthrough(false);
                       setCurrentStepIndex(0);
                     }}
-                    className="p-1 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-rose-400"
+                    className="p-1 rounded-lg bg-slate-100 dark:bg-[#1E293B] hover:bg-slate-200 dark:hover:bg-[#334155] text-rose-500 cursor-pointer"
                     title="Close Walkthrough"
                   >
-                    ✕
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 {walkthroughSteps[currentStepIndex]?.action}
               </p>
 
-              <div className="pt-2 border-t border-[#1E293B] flex items-center justify-between text-[11px] text-slate-400">
-                <span>Protocol: <strong className="text-slate-200">{walkthroughSteps[currentStepIndex]?.protocol}</strong></span>
-                <span>Latency: <strong className="text-emerald-400">{walkthroughSteps[currentStepIndex]?.latency}</strong></span>
+              <div className="pt-2 border-t border-slate-200 dark:border-[#1E293B] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                <span>Protocol: <strong className="text-slate-800 dark:text-slate-200">{walkthroughSteps[currentStepIndex]?.protocol}</strong></span>
+                <span>Latency: <strong className="text-emerald-600 dark:text-emerald-400">{walkthroughSteps[currentStepIndex]?.latency}</strong></span>
               </div>
             </div>
           )}
@@ -1053,58 +1119,71 @@ const ArchitectureDesignerCanvas: React.FC = () => {
 
         {/* Right Drawer: Inspector / AI Audit / Walkthrough / Explain Pitch / Auto-Design */}
         {showDrawer && (
-          <aside className="w-96 border-l border-[#1E293B] bg-[#151C2E] flex flex-col z-20 shadow-2xl absolute lg:relative right-0 h-full">
+          <aside className="w-80 sm:w-96 border-l border-slate-200 dark:border-[#1E293B] bg-white dark:bg-[#151C2E] flex flex-col z-40 fixed lg:relative right-0 inset-y-0 h-full shadow-2xl lg:shadow-none">
+            {/* Header on mobile */}
+            <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-[#1E293B] lg:hidden">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Architecture Assistant
+              </span>
+              <button
+                onClick={() => setShowDrawer(false)}
+                className="p-1 rounded-md text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
             {/* Drawer Tabs */}
-            <div className="flex items-center border-b border-[#1E293B] px-2 overflow-x-auto">
+            <div className="flex items-center border-b border-slate-200 dark:border-[#1E293B] px-2 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setActiveTab('explain')}
-                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all ${
+                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all cursor-pointer ${
                   activeTab === 'explain'
-                    ? 'border-emerald-500 text-emerald-300'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'border-emerald-500 text-emerald-600 dark:text-emerald-300'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> Explain
+                <Volume2 className="w-3.5 h-3.5 text-emerald-500" /> Explain
               </button>
               <button
                 onClick={() => setActiveTab('walkthrough')}
-                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all ${
+                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all cursor-pointer ${
                   activeTab === 'walkthrough'
-                    ? 'border-amber-500 text-amber-300'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'border-amber-500 text-amber-600 dark:text-amber-300'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                <Play className="w-3.5 h-3.5 text-amber-400" /> Walkthrough
+                <Play className="w-3.5 h-3.5 text-amber-500" /> Walkthrough
               </button>
               <button
                 onClick={() => setActiveTab('audit')}
-                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all ${
+                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all cursor-pointer ${
                   activeTab === 'audit'
-                    ? 'border-[#6366F1] text-white'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                <Bot className="w-3.5 h-3.5 text-[#06B6D4]" /> Audit
+                <Bot className="w-3.5 h-3.5 text-cyan-500" /> Audit
               </button>
               <button
                 onClick={() => setActiveTab('inspector')}
-                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all ${
+                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all cursor-pointer ${
                   activeTab === 'inspector'
-                    ? 'border-[#6366F1] text-white'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                <Sliders className="w-3.5 h-3.5 text-[#A78BFA]" /> Inspect
+                <Sliders className="w-3.5 h-3.5 text-indigo-500" /> Inspect
               </button>
               <button
                 onClick={() => setActiveTab('generate')}
-                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all ${
+                className={`py-3 px-2 text-xs font-semibold border-b-2 flex items-center gap-1 whitespace-nowrap transition-all cursor-pointer ${
                   activeTab === 'generate'
-                    ? 'border-[#6366F1] text-white'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'border-[#6366F1] text-indigo-600 dark:text-white'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Auto
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Auto
               </button>
             </div>
 
@@ -1113,20 +1192,20 @@ const ArchitectureDesignerCanvas: React.FC = () => {
               {/* Tab: Explain to Interviewer */}
               {activeTab === 'explain' && (
                 <div className="space-y-4">
-                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 to-teal-950/40 border border-emerald-500/30">
+                  <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-gradient-to-r dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200 dark:border-emerald-500/30">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Volume2 className="w-4 h-4 text-emerald-400" /> FAANG Interviewer Pitch
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Volume2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> FAANG Interviewer Pitch
                       </div>
                       <button
                         onClick={handleCopyPitch}
-                        className="text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 flex items-center gap-1 transition-all"
+                        className="text-[11px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 flex items-center gap-1 transition-all cursor-pointer"
                       >
-                        {copiedPitch ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        {copiedPitch ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
                         <span>{copiedPitch ? 'Copied!' : 'Copy Script'}</span>
                       </button>
                     </div>
-                    <p className="text-[11px] text-slate-300">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
                       Step-by-step verbal narrative, explicit architectural trade-offs, and defense questions to present to your interviewer.
                     </p>
                   </div>
@@ -1134,12 +1213,12 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                   {explanationData ? (
                     <div className="space-y-4">
                       {/* Elevator Pitch */}
-                      <div className="p-4 rounded-xl bg-[#1E293B] border border-[#334155] space-y-2">
-                        <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] space-y-2">
+                        <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center justify-between">
                           <span>1. 60-Second Opening Pitch</span>
-                          <span className="text-[10px] text-slate-400">Executive Summary</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">Executive Summary</span>
                         </div>
-                        <p className="text-xs text-slate-200 leading-relaxed italic border-l-2 border-emerald-500 pl-3">
+                        <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed italic border-l-2 border-emerald-500 pl-3">
                           {explanationData.elevatorPitch}
                         </p>
                       </div>
@@ -1147,21 +1226,21 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                       {/* Trade-Offs Section */}
                       {explanationData.tradeOffs?.length > 0 && (
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold text-amber-300 uppercase tracking-wider">
+                          <div className="text-xs font-semibold text-amber-600 dark:text-amber-300 uppercase tracking-wider">
                             2. Justified Trade-Offs & Decisions
                           </div>
                           {explanationData.tradeOffs.map((to: any, idx: number) => (
-                            <div key={idx} className="p-3 rounded-xl bg-[#1E293B]/70 border border-[#334155]/60 space-y-1.5 text-xs">
-                              <div className="font-semibold text-white">{to.decision}</div>
+                            <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-[#1E293B]/70 border border-slate-200 dark:border-[#334155]/60 space-y-1.5 text-xs">
+                              <div className="font-semibold text-slate-900 dark:text-white">{to.decision}</div>
                               <div className="flex items-center gap-1.5 text-[11px]">
-                                <span className="text-emerald-400 font-bold">Chose:</span>
-                                <span className="text-slate-200">{to.chosenOption}</span>
-                                <span className="text-slate-500">vs</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 font-bold">Chose:</span>
+                                <span className="text-slate-800 dark:text-slate-200">{to.chosenOption}</span>
+                                <span className="text-slate-400">vs</span>
                                 <span className="text-slate-400 line-through">{to.alternativeOption}</span>
                               </div>
-                              <p className="text-slate-300 text-[11px]">{to.whyChosen}</p>
+                              <p className="text-slate-600 dark:text-slate-300 text-[11px]">{to.whyChosen}</p>
                               {to.capPerspective && (
-                                <div className="text-[10px] text-[#A78BFA] font-mono pt-1">
+                                <div className="text-[10px] text-indigo-600 dark:text-[#A78BFA] font-mono pt-1">
                                   CAP Alignment: {to.capPerspective}
                                 </div>
                               )}
@@ -1173,14 +1252,14 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                       {/* Failure Modes & SPOF Defense */}
                       {explanationData.failureModes?.length > 0 && (
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold text-rose-400 uppercase tracking-wider">
+                          <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
                             3. Failure Modes & Recovery Defense
                           </div>
                           {explanationData.failureModes.map((fm: any, idx: number) => (
-                            <div key={idx} className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-1 text-xs">
-                              <div className="font-semibold text-white">{fm.component} Failure</div>
-                              <p className="text-slate-300 text-[11px]">{fm.failureScenario}</p>
-                              <div className="text-[11px] text-emerald-400 font-medium pt-1">
+                            <div key={idx} className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-500/20 space-y-1 text-xs">
+                              <div className="font-semibold text-slate-900 dark:text-white">{fm.component} Failure</div>
+                              <p className="text-slate-600 dark:text-slate-300 text-[11px]">{fm.failureScenario}</p>
+                              <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium pt-1">
                                 <strong>Mitigation:</strong> {fm.mitigation}
                               </div>
                             </div>
@@ -1191,20 +1270,20 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                       {/* Probing Interviewer Questions */}
                       {explanationData.interviewerQuestions?.length > 0 && (
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold text-[#06B6D4] uppercase tracking-wider">
+                          <div className="text-xs font-semibold text-cyan-600 dark:text-[#06B6D4] uppercase tracking-wider">
                             4. Anticipated Interviewer Questions
                           </div>
                           {explanationData.interviewerQuestions.map((q: any, idx: number) => (
-                            <div key={idx} className="p-3 rounded-xl bg-[#1E293B] border border-[#334155] space-y-1.5 text-xs">
-                              <div className="font-bold text-white flex items-start gap-1.5">
-                                <span className="text-[#06B6D4]">Q{idx + 1}:</span>
+                            <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] space-y-1.5 text-xs">
+                              <div className="font-bold text-slate-900 dark:text-white flex items-start gap-1.5">
+                                <span className="text-cyan-600 dark:text-[#06B6D4]">Q{idx + 1}:</span>
                                 <span>{q.question}</span>
                               </div>
-                              <div className="text-[10px] text-amber-300/90 font-mono">
+                              <div className="text-[10px] text-amber-700 dark:text-amber-300 font-mono">
                                 <strong>Interviewer Intent:</strong> {q.interviewerIntent}
                               </div>
-                              <div className="p-2 rounded bg-[#151C2E] border border-[#334155]/40 text-slate-300 text-[11px] leading-relaxed">
-                                <strong className="text-emerald-400">Model Answer: </strong>
+                              <div className="p-2 rounded bg-white dark:bg-[#151C2E] border border-slate-200 dark:border-[#334155]/40 text-slate-700 dark:text-slate-300 text-[11px] leading-relaxed">
+                                <strong className="text-emerald-600 dark:text-emerald-400">Model Answer: </strong>
                                 {q.suggestedAnswer}
                               </div>
                             </div>
@@ -1214,17 +1293,17 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                     </div>
                   ) : (
                     <div className="py-12 text-center space-y-3">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                         <Volume2 className="w-6 h-6" />
                       </div>
-                      <div className="font-semibold text-sm text-white">Generate Interview Walkthrough</div>
-                      <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                      <div className="font-semibold text-sm text-slate-900 dark:text-white">Generate Interview Walkthrough</div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
                         Click below to synthesize a complete verbal walkthrough script calibrated to your exact components, technologies, and scale.
                       </p>
                       <button
                         onClick={handleRunExplain}
                         disabled={isExplaining}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-semibold shadow-md shadow-emerald-600/20 inline-flex items-center gap-2"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-semibold shadow-md shadow-emerald-600/20 inline-flex items-center gap-2 cursor-pointer"
                       >
                         <Sparkles className="w-3.5 h-3.5" /> Generate Interview Pitch
                       </button>
@@ -1236,11 +1315,11 @@ const ArchitectureDesignerCanvas: React.FC = () => {
               {/* Tab: How It Works Walkthrough */}
               {activeTab === 'walkthrough' && (
                 <div className="space-y-4">
-                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5 mb-1">
-                      <Play className="w-4 h-4 text-amber-400 fill-current" /> Interactive Request Flow
+                  <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mb-1">
+                      <Play className="w-4 h-4 text-amber-500 fill-current" /> Interactive Request Flow
                     </div>
-                    <p className="text-[11px] text-slate-300">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
                       Step through each layer of your topology in chronological order. Watch the active component highlight on the canvas.
                     </p>
                   </div>
@@ -1257,26 +1336,26 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                           }}
                           className={`p-3 rounded-xl border text-xs cursor-pointer transition-all ${
                             isCurrent
-                              ? 'bg-amber-500/20 border-amber-400 shadow-lg shadow-amber-500/20 scale-[1.02]'
-                              : 'bg-[#1E293B]/70 border-[#334155]/60 hover:border-slate-400'
+                              ? 'bg-amber-50 dark:bg-amber-500/20 border-amber-400 shadow-lg shadow-amber-500/20 scale-[1.02]'
+                              : 'bg-slate-50 dark:bg-[#1E293B]/70 border-slate-200 dark:border-[#334155]/60 hover:border-slate-400'
                           }`}
                         >
-                          <div className="flex items-center justify-between pb-1 mb-1 border-b border-[#334155]/40">
-                            <span className="font-bold text-white flex items-center gap-1.5">
+                          <div className="flex items-center justify-between pb-1 mb-1 border-b border-slate-200 dark:border-[#334155]/40">
+                            <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                                isCurrent ? 'bg-amber-400 text-black' : 'bg-[#151C2E] text-slate-300'
+                                isCurrent ? 'bg-amber-400 text-slate-950' : 'bg-slate-200 dark:bg-[#151C2E] text-slate-700 dark:text-slate-300'
                               }`}>
                                 {step.stepNumber}
                               </span>
                               <span>{step.component}</span>
                             </span>
-                            <span className="text-[10px] font-mono text-emerald-400">{step.latency}</span>
+                            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">{step.latency}</span>
                           </div>
-                          <p className="text-slate-300 text-[11px] leading-relaxed mb-2">
+                          <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed mb-2">
                             {step.action}
                           </p>
-                          <div className="text-[10px] text-slate-400 bg-[#151C2E] p-2 rounded-lg border border-[#334155]/30">
-                            <strong className="text-amber-300">Interviewer Talking Point: </strong>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 bg-white dark:bg-[#151C2E] p-2 rounded-lg border border-slate-200 dark:border-[#334155]/30">
+                            <strong className="text-amber-700 dark:text-amber-300">Interviewer Talking Point: </strong>
                             {step.interviewerTalkingPoint}
                           </div>
                         </div>
@@ -1292,40 +1371,40 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                   {auditResult ? (
                     <>
                       {/* Score Gauge */}
-                      <div className="p-4 rounded-xl bg-[#1E293B] border border-[#334155] flex items-center justify-between">
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] flex items-center justify-between">
                         <div>
-                          <div className="text-xs text-slate-400 font-medium">Architecture Health Score</div>
-                          <div className="text-2xl font-black text-white mt-0.5">
-                            {auditResult.healthScore} <span className="text-sm font-normal text-slate-400">/ 100</span>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Architecture Health Score</div>
+                          <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+                            {auditResult.healthScore} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">/ 100</span>
                           </div>
-                          <div className="text-xs text-[#06B6D4] font-medium mt-1">
+                          <div className="text-xs text-cyan-600 dark:text-[#06B6D4] font-medium mt-1">
                             {auditResult.scalabilityRating}
                           </div>
                         </div>
-                        <div className="w-14 h-14 rounded-full border-4 border-[#6366F1] flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-[#6366F1]/30">
+                        <div className="w-14 h-14 rounded-full border-4 border-[#6366F1] flex items-center justify-center font-bold text-lg text-slate-900 dark:text-white shadow-lg shadow-[#6366F1]/30">
                           {auditResult.healthScore}%
                         </div>
                       </div>
 
                       {/* Summary */}
-                      <div className="p-3.5 rounded-xl bg-[#1E293B]/60 border border-[#334155]/60 text-xs text-slate-300 leading-relaxed">
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1E293B]/60 border border-slate-200 dark:border-[#334155]/60 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                         {auditResult.architectureSummary}
                       </div>
 
                       {/* Single Points of Failure */}
                       {auditResult.singlePointsOfFailure?.length > 0 && (
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
+                          <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
                             <AlertTriangle className="w-3.5 h-3.5" /> Single Points of Failure ({auditResult.singlePointsOfFailure.length})
                           </div>
                           {auditResult.singlePointsOfFailure.map((spof: any, idx: number) => (
-                            <div key={idx} className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-1">
-                              <div className="flex items-center justify-between text-xs font-semibold text-white">
+                            <div key={idx} className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 space-y-1">
+                              <div className="flex items-center justify-between text-xs font-semibold text-slate-900 dark:text-white">
                                 <span>{spof.component}</span>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">{spof.severity}</span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300">{spof.severity}</span>
                               </div>
-                              <p className="text-xs text-slate-300">{spof.risk}</p>
-                              <div className="text-[11px] text-emerald-400 pt-1">
+                              <p className="text-xs text-slate-600 dark:text-slate-300">{spof.risk}</p>
+                              <div className="text-[11px] text-emerald-700 dark:text-emerald-400 pt-1">
                                 <strong>Fix:</strong> {spof.remediation}
                               </div>
                             </div>
@@ -1336,17 +1415,17 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                       {/* Bottlenecks */}
                       {auditResult.bottlenecks?.length > 0 && (
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+                          <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
                             <Activity className="w-3.5 h-3.5" /> Throughput Bottlenecks
                           </div>
                           {auditResult.bottlenecks.map((bn: any, idx: number) => (
-                            <div key={idx} className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1">
-                              <div className="flex items-center justify-between text-xs font-semibold text-white">
+                            <div key={idx} className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 space-y-1">
+                              <div className="flex items-center justify-between text-xs font-semibold text-slate-900 dark:text-white">
                                 <span>{bn.component}</span>
-                                <span className="text-[10px] font-mono text-amber-300">{bn.maxQps}</span>
+                                <span className="text-[10px] font-mono text-amber-700 dark:text-amber-300">{bn.maxQps}</span>
                               </div>
-                              <p className="text-xs text-slate-300">{bn.issue}</p>
-                              <div className="text-[11px] text-amber-200/90 pt-1">
+                              <p className="text-xs text-slate-600 dark:text-slate-300">{bn.issue}</p>
+                              <div className="text-[11px] text-amber-800 dark:text-amber-200/90 pt-1">
                                 <strong>Scale:</strong> {bn.remediation}
                               </div>
                             </div>
@@ -1357,12 +1436,12 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                       {/* Recommendations */}
                       {auditResult.recommendations?.length > 0 && (
                         <div className="space-y-2">
-                          <div className="text-xs font-semibold text-[#06B6D4] flex items-center gap-1.5 uppercase tracking-wider">
+                          <div className="text-xs font-semibold text-cyan-600 dark:text-[#06B6D4] flex items-center gap-1.5 uppercase tracking-wider">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Actionable Upgrades
                           </div>
-                          <ul className="space-y-1.5 text-xs text-slate-300">
+                          <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                             {auditResult.recommendations.map((rec: string, idx: number) => (
-                              <li key={idx} className="p-2 rounded-lg bg-[#1E293B]/50 border border-[#334155]/40 flex items-start gap-2">
+                              <li key={idx} className="p-2 rounded-lg bg-slate-50 dark:bg-[#1E293B]/50 border border-slate-200 dark:border-[#334155]/40 flex items-start gap-2">
                                 <span className="text-[#6366F1] font-bold">•</span>
                                 <span>{rec}</span>
                               </li>
@@ -1373,17 +1452,17 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                     </>
                   ) : (
                     <div className="py-12 text-center space-y-3">
-                      <div className="w-12 h-12 rounded-2xl bg-[#6366F1]/10 text-[#6366F1] flex items-center justify-center mx-auto">
+                      <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-[#6366F1]/10 text-indigo-600 dark:text-[#6366F1] flex items-center justify-center mx-auto">
                         <Bot className="w-6 h-6" />
                       </div>
-                      <div className="font-semibold text-sm text-white">No Audit Run Yet</div>
-                      <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                      <div className="font-semibold text-sm text-slate-900 dark:text-white">No Audit Run Yet</div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
                         Click the "AI Architecture Audit" button to evaluate your diagram for SPOFs, scalability limits, and security vulnerabilities.
                       </p>
                       <button
                         onClick={handleRunAudit}
                         disabled={isAuditing}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white text-xs font-semibold shadow-md shadow-[#6366F1]/20 inline-flex items-center gap-2"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white text-xs font-semibold shadow-md shadow-[#6366F1]/20 inline-flex items-center gap-2 cursor-pointer"
                       >
                         <Sparkles className="w-3.5 h-3.5" /> Start AI Audit
                       </button>
@@ -1397,13 +1476,13 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                 <div>
                   {selectedNode ? (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between pb-2 border-b border-[#1E293B]">
-                        <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#1E293B]">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                           Configure Node
                         </span>
                         <button
                           onClick={deleteSelectedNode}
-                          className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
+                          className="text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
                         </button>
@@ -1411,63 +1490,63 @@ const ArchitectureDesignerCanvas: React.FC = () => {
 
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-xs font-medium text-slate-400 mb-1">Component Name</label>
+                          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Component Name</label>
                           <input
                             type="text"
                             value={(selectedNode.data as unknown as ArchitectureNodeData).label || ''}
                             onChange={(e) => updateSelectedNodeData('label', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg bg-[#1E293B] border border-[#334155] text-xs text-white focus:outline-none focus:border-[#6366F1]"
+                            className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-slate-400 mb-1">Tech Stack / Engine</label>
+                          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Tech Stack / Engine</label>
                           <input
                             type="text"
                             value={(selectedNode.data as unknown as ArchitectureNodeData).techStack || ''}
                             onChange={(e) => updateSelectedNodeData('techStack', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg bg-[#1E293B] border border-[#334155] text-xs text-white focus:outline-none focus:border-[#6366F1]"
+                            className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
                             placeholder="e.g. Redis 7.2 / PostgreSQL 16"
                           />
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">QPS / Capacity</label>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">QPS / Capacity</label>
                             <input
                               type="text"
                               value={(selectedNode.data as unknown as ArchitectureNodeData).qps || ''}
                               onChange={(e) => updateSelectedNodeData('qps', e.target.value)}
-                              className="w-full px-3 py-2 rounded-lg bg-[#1E293B] border border-[#334155] text-xs text-white focus:outline-none focus:border-[#6366F1]"
+                              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
                               placeholder="e.g. 50k QPS"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">Replication / Pods</label>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Replication / Pods</label>
                             <input
                               type="text"
                               value={(selectedNode.data as unknown as ArchitectureNodeData).replicas || ''}
                               onChange={(e) => updateSelectedNodeData('replicas', e.target.value)}
-                              className="w-full px-3 py-2 rounded-lg bg-[#1E293B] border border-[#334155] text-xs text-white focus:outline-none focus:border-[#6366F1]"
+                              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
                               placeholder="e.g. 4 Replicas"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-slate-400 mb-1">Architecture Notes</label>
+                          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Architecture Notes</label>
                           <textarea
                             rows={3}
                             value={(selectedNode.data as unknown as ArchitectureNodeData).notes || ''}
                             onChange={(e) => updateSelectedNodeData('notes', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg bg-[#1E293B] border border-[#334155] text-xs text-white focus:outline-none focus:border-[#6366F1]"
+                            className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
                             placeholder="Add failover policy, partition strategy or SLA requirements..."
                           />
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="py-16 text-center text-xs text-slate-400">
+                    <div className="py-16 text-center text-xs text-slate-500 dark:text-slate-400">
                       Click any component on the canvas to inspect its configuration and properties.
                     </div>
                   )}
@@ -1478,30 +1557,30 @@ const ArchitectureDesignerCanvas: React.FC = () => {
               {activeTab === 'generate' && (
                 <div className="space-y-4">
                   <div>
-                    <div className="text-xs font-semibold text-white mb-1">AI Architecture Generator</div>
-                    <p className="text-xs text-slate-400">
+                    <div className="text-xs font-semibold text-slate-900 dark:text-white mb-1">AI Architecture Generator</div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Describe your system requirements and scale. AI will design and layout the complete topology with nodes and connections.
                     </p>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">System Prompt</label>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">System Prompt</label>
                       <textarea
                         rows={4}
                         value={genPrompt}
                         onChange={(e) => setGenPrompt(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-[#1E293B] border border-[#334155] text-xs text-white focus:outline-none focus:border-[#6366F1]"
+                        className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
                         placeholder="e.g. Design a real-time collaborative whiteboarding system like Figma with WebSockets and CRDT synchronization..."
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">Target Scale</label>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Target Scale</label>
                       <select
                         value={genScale}
                         onChange={(e) => setGenScale(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-[#1E293B] border border-[#334155] text-xs text-white focus:outline-none focus:border-[#6366F1]"
+                        className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#1E293B] border border-slate-200 dark:border-[#334155] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
                       >
                         <option value="10k QPS">Mid Scale (10,000 QPS)</option>
                         <option value="100k QPS">Large Scale (100,000 QPS)</option>
@@ -1512,7 +1591,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                     <button
                       onClick={handleGenerate}
                       disabled={isGenerating || !genPrompt.trim()}
-                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#4F46E5] hover:opacity-95 text-white text-xs font-semibold shadow-md shadow-[#6366F1]/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#4F46E5] hover:opacity-95 text-white text-xs font-semibold shadow-md shadow-[#6366F1]/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4 text-amber-300" />
                       {isGenerating ? 'Synthesizing Architecture...' : 'Generate Architecture'}

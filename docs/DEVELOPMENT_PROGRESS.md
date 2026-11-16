@@ -119,3 +119,23 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 - **Frontend**: `TopicsExplorerPage.tsx`, routing `/topics`, header navigation pill, mobile drawer link, cross-links on `HldDetailPage` and `LldDetailPage`.
 - **Tests**: 5/5 unit tests in `PracticeServiceTest` passing; 30/30 backend unit and integration tests passing; Vitest unit tests passing; Vite production build passing.
 - **Status**: COMPLETED
+
+### Phase 16: Architecture Designer Drag-and-Drop Fix, Theme Switcher (Light/Dark Mode), & Full Responsiveness
+- **Scope**:
+  1. **Architecture Designer Drag-and-Drop Fix**:
+     - Resolved HTML5 drag-and-drop bug caused by SVG child pointer-event trapping and duplicate drop handler suppression.
+     - Enforced `pointer-events-none select-none` on inner elements of draggable library cards with clean `cursor-grab active:cursor-grabbing`.
+     - Standardized data transfer serialization (`application/reactflow`, `text/plain`, and global memory fallback) and coordinate projection via `@xyflow/react` `screenToFlowPosition`.
+     - Added guaranteed touch/tablet fallback with prominent "+ Add to Canvas" buttons and tap-to-add calculation placing nodes at the center of the active canvas viewport.
+  2. **Full UI Light / Dark Theme Support**:
+     - Created `ThemeContext.tsx` managing `light | dark | system` themes with `localStorage` persistence and automatic OS `prefers-color-scheme` synchronization.
+     - Configured Tailwind CSS v4 class-based variant `@custom-variant dark (&:where(.dark, .dark *))` and CSS custom properties in `index.css`.
+     - Added theme toggle button (Sun/Moon icons) with instant transitions in top navigation and mobile drawer.
+     - Styled `ArchitectureDesignerPage`, `ArchitectureNode`, `TopicsExplorerPage`, and landing page for both dark slate and clean light themes, including React Flow canvas dots, controls, and minimap mask.
+  3. **Full Responsiveness Across All Viewports**:
+     - Built mobile slide-out drawers for Component Library and Assistant Drawer with backdrop overlays and close triggers (`✕`).
+     - Added floating mobile quick-action pill bar (`Components`, `Inspector / Audit`) for instant one-thumb navigation on small screens.
+     - Adapted walkthrough banners, simulation HUD, and action buttons for flexible wrapping from 360px mobile viewports up to 4K displays.
+- **Frontend**: `frontend/src/context/ThemeContext.tsx`, `frontend/src/index.css`, `frontend/src/main.tsx`, `frontend/src/App.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.tsx`, `frontend/src/pages/designer/ArchitectureNode.tsx`, `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
+- **Tests**: Vitest tests passing (`npm test` exit code 0); Vite production build passing (`npm run build` exit code 0); all 30 backend tests passing (`mvn test` exit code 0).
+- **Status**: COMPLETED
