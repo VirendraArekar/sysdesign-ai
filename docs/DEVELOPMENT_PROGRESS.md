@@ -29,6 +29,7 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 15** | System Design Topics Explorer (HLD/LLD Segregation, Multi-Lang Code, UML & Q&A) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | af81984 | SUCCESS |
 | **Phase 16** | Architecture Designer Drag-and-Drop Fix, Theme Switcher & Responsiveness | COMPLETED | COMPLETED | COMPLETED | COMPLETED | d34ab88 | SUCCESS |
 | **Phase 17** | Designer End-to-End Drag & Drop Fix, Backend Component Catalog & Validation, Cache Busting | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 1a0128a | SUCCESS |
+| **Phase 18** | Architecture Canvas Flexbox Zero-Height Resolution, Camera Auto-Centering & Visible Node Rendering | COMPLETED | COMPLETED | COMPLETED | COMPLETED | PENDING | PENDING |
 
 ---
 
@@ -167,4 +168,24 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 - **Backend**: `ComponentDefinitionDto.java`, `NodeValidationRequest.java`, `NodeValidationResponse.java`, `ArchitectureService.java`, `ArchitectureController.java`, `SecurityConfig.java`, `ArchitectureServiceTest.java`.
 - **Frontend**: `ArchitectureDesignerPage.tsx`, `ArchitectureDesignerPage.component.test.tsx`, `vite.config.ts`, `docker/nginx.conf`.
 - **Commit**: `1a0128a` (pushed to `origin main`).
+- **Status**: COMPLETED
+
+### Phase 18: Architecture Canvas Flexbox Zero-Height Resolution, Camera Auto-Centering & Visible Node Rendering
+- **Scope**:
+  1. **Root Cause Analysis & Zero-Height Canvas Bug Fix**:
+     - **The Flexbox Height Collapse**: In CSS Flexbox Level 1, child elements with `height: 100%` (`h-full`) inside a flex row container whose height is computed dynamically by `flex: 1 1 0%` cannot resolve percentage heights and collapse to `height: 0px`. Because the React Flow canvas container wrapper collapsed to $0\text{px}$ height, all nodes and canvas elements were flattened into a $0\text{px}$ invisible line while sidebars (which had internal content) remained visible.
+     - **Cross-Axis Flex Stretch (`self-stretch h-auto`)**: Updated canvas wrapper to `className="flex-1 self-stretch h-auto min-h-0 relative overflow-hidden flex flex-col"` with `style={{ alignSelf: 'stretch', height: 'auto', minHeight: 0, flex: '1 1 0%' }}` and `<ReactFlow style={{ width: '100%', height: '100%', flex: 1 }}>`. This gives the canvas wrapper and React Flow the full computed cross-axis height ($756\text{px}$) across all viewports.
+  2. **Camera Dynamic Auto-Centering & Visible Focus**:
+     - Connected `setCenter` from `useReactFlow()` on both `addNode` and `onDrop`.
+     - Whenever a new component is added or dropped, the camera smoothly pans to center on the new node ($posX + 105, posY + 74$) with a smooth duration ($400\text{ms}$), guaranteeing that the newly added node is immediately in the user's field of view.
+     - Avoided drawer obstruction on viewports $< 1024\text{px}$ by making drawer open conditional on `window.innerWidth >= 1024`.
+  3. **Full-Canvas Layout & Footer Exclusion**:
+     - Updated `frontend/src/App.tsx` with `useLocation()` to omit the site footer when on `/designer`, maximizing vertical screen estate and eliminating double vertical scrollbars.
+  4. **Headless Chrome Verification & Screenshot**:
+     - Verified with headless Chrome automation script through Chrome DevTools Protocol (CDP):
+       - Canvas container height verified at $756\text{px}$ (previously $0\text{px}$).
+       - Initial 6 nodes verified with real coordinates and sizes.
+       - Clicking `+ Add` on Microservice Pod places 7th node at `top: 350px, left: 363px, width: 210px, height: 148px` right in the visible center.
+       - Captured screenshot confirming full visibility.
+- **Frontend**: `frontend/src/App.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.component.test.tsx`.
 - **Status**: COMPLETED

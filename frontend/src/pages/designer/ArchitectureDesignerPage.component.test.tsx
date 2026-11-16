@@ -35,8 +35,17 @@ describe('ArchitectureDesignerPage Interactive Component', () => {
     const addButtons = screen.getAllByTitle('Add component to canvas center');
     expect(addButtons.length).toBe(9);
 
+    const initialNodes = document.querySelectorAll('.react-flow__node');
+    console.log('Nodes before click:', initialNodes.length);
+
     fireEvent.click(addButtons[0]);
     expect(screen.getByText('Configure Node')).toBeDefined();
+
+    const afterNodes = document.querySelectorAll('.react-flow__node');
+    console.log('Nodes after click:', afterNodes.length);
+    afterNodes.forEach((node, idx) => {
+      console.log(`Node ${idx}: text="${node.textContent?.slice(0, 30)}", style=${(node as HTMLElement).style.cssText}`);
+    });
   });
 
   it('handles native drag and drop onto canvas', async () => {

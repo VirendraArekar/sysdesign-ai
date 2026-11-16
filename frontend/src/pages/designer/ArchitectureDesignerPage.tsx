@@ -213,7 +213,7 @@ const DEFAULT_WALKTHROUGH_STEPS: WalkthroughStep[] = [
 
 const ArchitectureDesignerCanvas: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition, fitView } = useReactFlow();
+  const { screenToFlowPosition, fitView, setCenter } = useReactFlow();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -559,8 +559,17 @@ const ArchitectureDesignerCanvas: React.FC = () => {
       ]);
       setSelectedNode(newNode);
       setActiveTab('inspector');
-      setShowDrawer(true);
+      if (window.innerWidth >= 1024) {
+        setShowDrawer(true);
+      }
       showToast(`✓ Placed ${finalLabel} at (${Math.round(posX)}, ${Math.round(posY)})`);
+
+      // Smoothly pan viewport so dropped node is clearly focused
+      setTimeout(() => {
+        try {
+          setCenter(posX + 105, posY + 74, { duration: 300 });
+        } catch (_) {}
+      }, 50);
 
       isDraggingRef.current = false;
       (window as any).__DRAGGED_ARCH_NODE__ = null;
@@ -630,8 +639,17 @@ const ArchitectureDesignerCanvas: React.FC = () => {
     ]);
     setSelectedNode(newNode);
     setActiveTab('inspector');
-    setShowDrawer(true);
+    if (window.innerWidth >= 1024) {
+      setShowDrawer(true);
+    }
     showToast(`✓ Added ${finalLabel} to canvas (${nodes.length + 1} total components)`);
+
+    // Smoothly pan camera so the newly added node is focused in view
+    setTimeout(() => {
+      try {
+        setCenter(posX + 105, posY + 74, { duration: 400 });
+      } catch (_) {}
+    }, 50);
 
     // Validate node asynchronously with backend
     axios.post(`${API_BASE}/architecture/node/validate`, {
@@ -885,9 +903,9 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] overflow-hidden bg-slate-100 dark:bg-[#0B1020] text-slate-900 dark:text-white transition-colors duration-200">
+    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] w-full overflow-hidden bg-slate-100 dark:bg-[#0B1020] text-slate-900 dark:text-white transition-colors duration-200">
       {/* Top Action Bar */}
-      <div className="h-14 border-b border-slate-200 dark:border-[#1E293B] bg-white dark:bg-[#151C2E] px-3 sm:px-4 flex items-center justify-between z-10 gap-2 shadow-xs">
+      <div className="h-14 border-b border-slate-200 dark:border-[#1E293B] bg-white dark:bg-[#151C2E] px-3 sm:px-4 flex items-center justify-between z-10 gap-2 shadow-xs shrink-0">
         {/* Left: Title & Drawer Toggles */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
@@ -1010,7 +1028,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
       </div>
 
       {/* Main Workspace: Left Palette + Canvas + Right Inspector/Audit Drawer */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative w-full h-[calc(100%-3.5rem)] min-h-0">
         {/* Left Component Tray (Responsive Drawer) */}
         {showLibrary && (
           <aside className="w-72 lg:w-64 border-r border-slate-200 dark:border-[#1E293B] bg-slate-50 dark:bg-[#151C2E] p-3 flex flex-col gap-2 overflow-y-auto z-40 fixed lg:relative inset-y-0 left-0 h-full shadow-2xl lg:shadow-none">
@@ -1095,7 +1113,8 @@ const ArchitectureDesignerCanvas: React.FC = () => {
         {/* Center Canvas */}
         <div 
           ref={reactFlowWrapper} 
-          className="flex-1 h-full relative"
+          className="flex-1 self-stretch h-auto min-h-0 relative overflow-hidden flex flex-col"
+          style={{ alignSelf: 'stretch', height: 'auto', minHeight: 0, flex: '1 1 0%' }}
           onDragOver={onDragOver}
           onDragEnter={onDragEnter}
           onDrop={onDrop}
@@ -1120,6 +1139,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
             onDrop={onDrop}
             nodeTypes={nodeTypes}
             fitView
+            style={{ width: '100%', height: '100%', flex: 1 }}
             className={isDark ? 'bg-[#0B1020]' : 'bg-slate-100'}
           >
             <Background 

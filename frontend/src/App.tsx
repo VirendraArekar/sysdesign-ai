@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from './store';
 import { logout } from './store/slices/authSlice';
@@ -108,16 +108,17 @@ const LandingPage: React.FC = () => {
   );
 };
 
-export const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { theme, resolvedTheme, toggleTheme } = useTheme();
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const location = useLocation();
+  const isDesigner = location.pathname === '/designer';
 
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B1020] text-slate-900 dark:text-[#F8FAFC] transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B1020] text-slate-900 dark:text-[#F8FAFC] transition-colors duration-200">
         {/* Top Navigation */}
         <header className="h-16 border-b border-slate-200 dark:border-[#1E293B] bg-white/90 dark:bg-[#151C2E]/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
           <div className="flex items-center gap-3">
@@ -302,11 +303,20 @@ export const App: React.FC = () => {
         {/* Global Semantic Search & RAG Modal */}
         <SemanticSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
-        {/* Footer */}
-        <footer className="border-t border-slate-200 dark:border-[#1E293B] bg-slate-50 dark:bg-[#0B1020] py-6 px-6 text-center text-xs text-slate-500">
-          <p>© 2026 System Design AI. Built for Senior, Staff, and Principal Engineers worldwide.</p>
-        </footer>
+        {/* Footer - hidden on full-canvas designer */}
+        {!isDesigner && (
+          <footer className="border-t border-slate-200 dark:border-[#1E293B] bg-slate-50 dark:bg-[#0B1020] py-6 px-6 text-center text-xs text-slate-500">
+            <p>© 2026 System Design AI. Built for Senior, Staff, and Principal Engineers worldwide.</p>
+          </footer>
+        )}
       </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 };
