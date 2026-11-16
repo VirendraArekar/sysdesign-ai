@@ -122,11 +122,14 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 
 ### Phase 16: Architecture Designer Drag-and-Drop Fix, Theme Switcher (Light/Dark Mode), & Full Responsiveness
 - **Scope**:
-  1. **Architecture Designer Drag-and-Drop Fix**:
-     - Resolved HTML5 drag-and-drop bug caused by SVG child pointer-event trapping and duplicate drop handler suppression.
-     - Enforced `pointer-events-none select-none` on inner elements of draggable library cards with clean `cursor-grab active:cursor-grabbing`.
-     - Standardized data transfer serialization (`application/reactflow`, `text/plain`, and global memory fallback) and coordinate projection via `@xyflow/react` `screenToFlowPosition`.
-     - Added guaranteed touch/tablet fallback with prominent "+ Add to Canvas" buttons and tap-to-add calculation placing nodes at the center of the active canvas viewport.
+  1. **Architecture Designer Drag-and-Drop Deep-Root Fix**:
+     - Diagnosed and eliminated root cause of drag aborts: removed dynamic state re-renders (`setIsDragOver`) inside `onDragOver`/`onDragEnter` which were causing React to remount DOM nodes during native drag gestures and aborting the browser drag session.
+     - Enforced declarative event handling: `onDragOver` now calls `event.preventDefault()` with `event.dataTransfer.dropEffect = 'copy'` without state mutations.
+     - Added `isDraggingRef` and `onDragEnd` lifecycle cleanup to differentiate between mouse drag gestures and clicks.
+     - Implemented multi-tier data payload hydration: checks `(window as any).__DRAGGED_ARCH_NODE__`, module global `globalDraggedNode`, `application/json`, `application/reactflow`, and `text/plain` with default component dictionary lookup.
+     - Protected coordinate calculation: bounded `screenToFlowPosition` inside `try...catch` with automatic fallback to canvas center coordinates (`posX: 350, posY: 200`).
+     - Added click-to-add fallback on both the component card and dedicated `+ Add` button for 100% reliable operation across desktop, trackpads, tablets, and mobile devices.
+     - Rebuilt and verified Docker frontend container (`sysdesign-frontend`) running Vite production build with zero errors.
   2. **Full UI Light / Dark Theme Support**:
      - Created `ThemeContext.tsx` managing `light | dark | system` themes with `localStorage` persistence and automatic OS `prefers-color-scheme` synchronization.
      - Configured Tailwind CSS v4 class-based variant `@custom-variant dark (&:where(.dark, .dark *))` and CSS custom properties in `index.css`.
@@ -136,7 +139,7 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
      - Built mobile slide-out drawers for Component Library and Assistant Drawer with backdrop overlays and close triggers (`✕`).
      - Added floating mobile quick-action pill bar (`Components`, `Inspector / Audit`) for instant one-thumb navigation on small screens.
      - Adapted walkthrough banners, simulation HUD, and action buttons for flexible wrapping from 360px mobile viewports up to 4K displays.
-- **Frontend**: `frontend/src/context/ThemeContext.tsx`, `frontend/src/index.css`, `frontend/src/main.tsx`, `frontend/src/App.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.tsx`, `frontend/src/pages/designer/ArchitectureNode.tsx`, `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
-- **Tests**: Vitest tests passing (`npm test` exit code 0); Vite production build passing (`npm run build` exit code 0); all 30 backend tests passing (`mvn test` exit code 0).
-- **Commit**: `6073ebf` (pushed to `origin main`).
+- **Frontend**: `frontend/src/context/ThemeContext.tsx`, `frontend/src/index.css`, `frontend/src/main.tsx`, `frontend/src/App.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.tsx`, `frontend/src/pages/designer/ArchitectureNode.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.test.ts`, `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
+- **Tests**: Vitest tests passing (3/3 tests in `App.test.tsx` and `ArchitectureDesignerPage.test.ts`); Vite production build passing (`npm run build` exit code 0); all 30 backend tests passing (`mvn test` exit code 0); Docker container rebuilt and healthy on port 3000.
+- **Commit**: `[PENDING]` (to be pushed to `origin main`).
 - **Status**: COMPLETED

@@ -73,6 +73,30 @@ const nodeTypes = {
   archNode: ArchitectureNode
 };
 
+export const COMPONENT_DEFINITIONS: Record<string, { label: string; tech: string; category: ArchitectureNodeData['category'] }> = {
+  client: { label: 'Web & Mobile Apps', tech: 'React / Next.js / Swift', category: 'client' },
+  cdn: { label: 'Edge CDN / Anycast', tech: 'Cloudflare / CloudFront', category: 'cdn' },
+  security: { label: 'Web App Firewall', tech: 'Cloudflare WAF / AWS Shield', category: 'security' },
+  load_balancer: { label: 'L7 Load Balancer', tech: 'Envoy / NGINX / ALB', category: 'load_balancer' },
+  compute: { label: 'Microservice Pod', tech: 'Spring Boot 3.4 / Java 21', category: 'compute' },
+  cache: { label: 'Redis Distributed Cache', tech: 'Redis 7.2 Cluster', category: 'cache' },
+  messaging: { label: 'Kafka Event Bus', tech: 'Apache Kafka 3.7', category: 'messaging' },
+  database: { label: 'Relational Database', tech: 'PostgreSQL 16 Multi-AZ', category: 'database' },
+  storage: { label: 'Object Storage', tech: 'AWS S3 Multi-Region', category: 'storage' },
+};
+
+const COMPONENT_LIBRARY_ITEMS = [
+  { category: 'client', label: 'Web & Mobile Apps', tech: 'React / Next.js / Swift', sub: 'Clients', icon: Smartphone, color: '#06B6D4' },
+  { category: 'cdn', label: 'Edge CDN / Anycast', tech: 'Cloudflare / CloudFront', sub: 'CDN & Edge', icon: Globe, color: '#6366F1' },
+  { category: 'security', label: 'Web App Firewall', tech: 'Cloudflare WAF / AWS Shield', sub: 'WAF & Anti-DDoS', icon: ShieldAlert, color: '#EF4444' },
+  { category: 'load_balancer', label: 'L7 Load Balancer', tech: 'Envoy / NGINX / ALB', sub: 'Load Balancer', icon: Network, color: '#8B5CF6' },
+  { category: 'compute', label: 'Microservice Pod', tech: 'Spring Boot 3.4 / Java 21', sub: 'App Service', icon: Cpu, color: '#3B82F6' },
+  { category: 'cache', label: 'Redis Distributed Cache', tech: 'Redis 7.2 Cluster', sub: 'In-Memory Cache', icon: Layers, color: '#10B981' },
+  { category: 'messaging', label: 'Kafka Event Bus', tech: 'Apache Kafka 3.7', sub: 'Message Queue', icon: Radio, color: '#F59E0B' },
+  { category: 'database', label: 'Relational Database', tech: 'PostgreSQL 16 Multi-AZ', sub: 'SQL Database', icon: Database, color: '#F43F5E' },
+  { category: 'storage', label: 'Object Storage', tech: 'AWS S3 Multi-Region', sub: 'S3 Blob Storage', icon: HardDrive, color: '#F97316' },
+];
+
 const INITIAL_NODES: Node[] = [
   {
     id: 'client-1',
@@ -356,8 +380,9 @@ const ArchitectureDesignerCanvas: React.FC = () => {
     setSelectedNode(null);
   };
 
-  // Drag and Drop state & handlers
-  const [isDragOver, setIsDragOver] = useState(false);
+  // Drag and Drop implementation - rock solid and stable without re-render loops
+  const isDraggingRef = useRef(false);
+  const lastDropTimeRef = useRef<number>(0);
 
   const onDragStart = (
     event: React.DragEvent,
@@ -365,109 +390,163 @@ const ArchitectureDesignerCanvas: React.FC = () => {
     defaultLabel: string,
     defaultTech: string
   ) => {
-    const payload = JSON.stringify({ category, defaultLabel, defaultTech });
-    globalDraggedNode = { category, defaultLabel, defaultTech };
+    isDraggingRef.current = true;
+    const cat = category || 'compute';
+    const payload = JSON.stringify({ category: cat, defaultLabel, defaultTech });
+    globalDraggedNode = { category: cat, defaultLabel, defaultTech };
+    (window as any).__DRAGGED_ARCH_NODE__ = { category: cat, defaultLabel, defaultTech };
+
     try {
-      event.dataTransfer.setData('application/reactflow', payload);
-      event.dataTransfer.setData('text/plain', payload);
-      event.dataTransfer.setData('text', payload);
+      event.dataTransfer.setData('application/reactflow', cat);
+      event.dataTransfer.setData('text/plain', cat);
+      event.dataTransfer.setData('application/json', payload);
     } catch (_) {}
-    event.dataTransfer.effectAllowed = 'move';
+
+    event.dataTransfer.effectAllowed = 'all';
   };
 
   const onDragEnd = () => {
-    setIsDragOver(false);
     setTimeout(() => {
+      isDraggingRef.current = false;
+      (window as any).__DRAGGED_ARCH_NODE__ = null;
       globalDraggedNode = null;
-    }, 500);
+    }, 200);
   };
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
+    event.dataTransfer.dropEffect = 'copy';
   }, []);
 
-  const onDragLeave = useCallback((event: React.DragEvent) => {
+  const onDragEnter = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    if (reactFlowWrapper.current && event.relatedTarget && reactFlowWrapper.current.contains(event.relatedTarget as unknown as globalThis.Node)) {
-      return;
-    }
-    setIsDragOver(false);
+    event.dataTransfer.dropEffect = 'copy';
   }, []);
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      setIsDragOver(false);
+      event.stopPropagation();
 
-      let parsedData: { category: ArchitectureNodeData['category']; defaultLabel: string; defaultTech: string } | null = null;
+      const now = Date.now();
+      if (now - lastDropTimeRef.current < 250) {
+        return;
+      }
+      lastDropTimeRef.current = now;
 
-      try {
-        const rawData =
-          event.dataTransfer.getData('application/reactflow') ||
-          event.dataTransfer.getData('text/plain') ||
-          event.dataTransfer.getData('text');
+      let category: ArchitectureNodeData['category'] | undefined;
+      let label: string | undefined;
+      let tech: string | undefined;
 
-        if (rawData) {
-          parsedData = JSON.parse(rawData);
+      // Source 1: Window global
+      const winObj = (window as any).__DRAGGED_ARCH_NODE__;
+      if (winObj && winObj.category) {
+        category = winObj.category;
+        label = winObj.defaultLabel;
+        tech = winObj.defaultTech;
+      }
+
+      // Source 2: Module global
+      if (!category && globalDraggedNode) {
+        category = globalDraggedNode.category;
+        label = globalDraggedNode.defaultLabel;
+        tech = globalDraggedNode.defaultTech;
+      }
+
+      // Source 3: DataTransfer
+      if (!category && event.dataTransfer) {
+        try {
+          const jsonStr = event.dataTransfer.getData('application/json');
+          if (jsonStr) {
+            const parsed = JSON.parse(jsonStr);
+            category = parsed.category;
+            label = parsed.defaultLabel;
+            tech = parsed.defaultTech;
+          }
+        } catch (_) {}
+
+        if (!category) {
+          const raw =
+            event.dataTransfer.getData('application/reactflow') ||
+            event.dataTransfer.getData('text/plain') ||
+            event.dataTransfer.getData('text');
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              category = parsed.category;
+              label = parsed.defaultLabel;
+              tech = parsed.defaultTech;
+            } catch (_) {
+              category = raw as any;
+            }
+          }
         }
-      } catch (err) {
-        console.warn('Could not parse dataTransfer text payload', err);
       }
 
-      if (!parsedData && globalDraggedNode) {
-        parsedData = globalDraggedNode;
+      // Lookup defaults if needed
+      if (category && COMPONENT_DEFINITIONS[category]) {
+        const def = COMPONENT_DEFINITIONS[category];
+        label = label || def.label;
+        tech = tech || def.tech;
       }
 
-      if (!parsedData) {
-        console.warn('No node payload found in drop event');
+      if (!category) {
+        console.warn('Drop event received with no component data');
         return;
       }
 
+      // Calculate position using screenToFlowPosition with error bounds
+      let posX = 350;
+      let posY = 200;
       try {
-        const { category, defaultLabel, defaultTech } = parsedData;
-
-        // Compute drop position in canvas coordinates
-        let position = screenToFlowPosition({
+        const position = screenToFlowPosition({
           x: event.clientX,
           y: event.clientY,
         });
 
-        if (!position || isNaN(position.x) || isNaN(position.y)) {
+        if (position && typeof position.x === 'number' && !isNaN(position.x)) {
+          posX = position.x;
+          posY = position.y;
+        } else {
           const bounds = reactFlowWrapper.current?.getBoundingClientRect();
           if (bounds) {
-            position = screenToFlowPosition({
+            const centerPos = screenToFlowPosition({
               x: bounds.left + bounds.width / 2,
               y: bounds.top + bounds.height / 2,
             });
-          } else {
-            position = { x: 300, y: 200 };
+            if (centerPos && typeof centerPos.x === 'number' && !isNaN(centerPos.x)) {
+              posX = centerPos.x;
+              posY = centerPos.y;
+            }
           }
         }
-
-        const id = `${category}-${Date.now()}`;
-        const newNode: Node = {
-          id,
-          type: 'archNode',
-          position,
-          data: {
-            label: defaultLabel,
-            category,
-            techStack: defaultTech,
-            qps: '15k QPS',
-            replicas: '3 Replicas',
-            isSimulatingTraffic
-          }
-        };
-
-        setNodes((nds) => [...nds, newNode]);
-        setSelectedNode(newNode);
-        setActiveTab('inspector');
-        setShowDrawer(true);
       } catch (err) {
-        console.error('Failed to create dropped node', err);
+        console.warn('screenToFlowPosition error fallback', err);
       }
+
+      const id = `${category}-${Date.now()}`;
+      const newNode: Node = {
+        id,
+        type: 'archNode',
+        position: { x: posX, y: posY },
+        data: {
+          label: label || 'Component',
+          category,
+          techStack: tech || '',
+          qps: '15k QPS',
+          replicas: '3 Replicas',
+          isSimulatingTraffic
+        }
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+      setSelectedNode(newNode);
+      setActiveTab('inspector');
+      setShowDrawer(true);
+
+      isDraggingRef.current = false;
+      (window as any).__DRAGGED_ARCH_NODE__ = null;
+      globalDraggedNode = null;
     },
     [screenToFlowPosition, setNodes, isSimulatingTraffic]
   );
@@ -475,15 +554,17 @@ const ArchitectureDesignerCanvas: React.FC = () => {
   // Click / Tap to Add (Guaranteed reliable on mobile/tablets and desktop)
   const addNode = (category: ArchitectureNodeData['category'], defaultLabel: string, defaultTech: string) => {
     const wrapperBounds = reactFlowWrapper.current?.getBoundingClientRect();
-    let position = { x: 350 + Math.random() * 150, y: 180 + Math.random() * 120 };
+    let posX = 350;
+    let posY = 200;
 
     if (wrapperBounds) {
       const centerPos = screenToFlowPosition({
         x: wrapperBounds.left + wrapperBounds.width / 2 + (Math.random() - 0.5) * 80,
         y: wrapperBounds.top + wrapperBounds.height / 2 + (Math.random() - 0.5) * 80
       });
-      if (centerPos && !isNaN(centerPos.x) && !isNaN(centerPos.y)) {
-        position = centerPos;
+      if (centerPos && typeof centerPos.x === 'number' && !isNaN(centerPos.x)) {
+        posX = centerPos.x;
+        posY = centerPos.y;
       }
     }
 
@@ -491,7 +572,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
     const newNode: Node = {
       id,
       type: 'archNode',
-      position,
+      position: { x: posX, y: posY },
       data: {
         label: defaultLabel,
         category,
@@ -880,7 +961,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#1E293B] text-cyan-700 dark:text-[#06B6D4] font-mono">
-                  Drag / Tap
+                  Drag / Add
                 </span>
                 <button
                   onClick={() => setShowLibrary(false)}
@@ -892,28 +973,21 @@ const ArchitectureDesignerCanvas: React.FC = () => {
             </div>
 
             <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-[#1E293B]/50 p-2 rounded-lg border border-slate-200 dark:border-[#334155]/40 shadow-xs">
-              Drag components onto the canvas, or tap/click <Plus className="w-3 h-3 inline text-indigo-500" /> to add to center.
+              Drag components directly onto the canvas, or click <strong className="text-indigo-600 dark:text-indigo-400">+ Add</strong> to place immediately.
             </div>
 
-            {[
-              { category: 'client', label: 'Web & Mobile Apps', tech: 'React / Next.js / Swift', sub: 'Clients', icon: Smartphone, color: '#06B6D4' },
-              { category: 'cdn', label: 'Edge CDN / Anycast', tech: 'Cloudflare / CloudFront', sub: 'CDN & Edge', icon: Globe, color: '#6366F1' },
-              { category: 'security', label: 'Web App Firewall', tech: 'Cloudflare WAF / AWS Shield', sub: 'WAF & Anti-DDoS', icon: ShieldAlert, color: '#EF4444' },
-              { category: 'load_balancer', label: 'L7 Load Balancer', tech: 'Envoy / NGINX / ALB', sub: 'Load Balancer', icon: Network, color: '#8B5CF6' },
-              { category: 'compute', label: 'Microservice Pod', tech: 'Spring Boot 3.4 / Java 21', sub: 'App Service', icon: Cpu, color: '#3B82F6' },
-              { category: 'cache', label: 'Redis Distributed Cache', tech: 'Redis 7.2 Cluster', sub: 'In-Memory Cache', icon: Layers, color: '#10B981' },
-              { category: 'messaging', label: 'Kafka Event Bus', tech: 'Apache Kafka 3.7', sub: 'Message Queue', icon: Radio, color: '#F59E0B' },
-              { category: 'database', label: 'Relational Database', tech: 'PostgreSQL 16 Multi-AZ', sub: 'SQL Database', icon: Database, color: '#F43F5E' },
-              { category: 'storage', label: 'Object Storage', tech: 'AWS S3 Multi-Region', sub: 'S3 Blob Storage', icon: HardDrive, color: '#F97316' }
-            ].map((item, idx) => {
+            {COMPONENT_LIBRARY_ITEMS.map((item, idx) => {
               const Icon = item.icon;
               return (
                 <div
                   key={idx}
-                  draggable
+                  draggable={true}
                   onDragStart={(e) => onDragStart(e, item.category as any, item.label, item.tech)}
                   onDragEnd={onDragEnd}
-                  onClick={() => addNode(item.category as any, item.label, item.tech)}
+                  onClick={() => {
+                    if (isDraggingRef.current) return;
+                    addNode(item.category as any, item.label, item.tech);
+                  }}
                   className="w-full p-2.5 rounded-xl bg-white dark:bg-[#1E293B]/80 hover:bg-slate-100 dark:hover:bg-[#1E293B] border border-slate-200 dark:border-[#334155]/60 hover:border-[#6366F1] cursor-grab active:cursor-grabbing text-left flex items-center justify-between transition-all group shadow-xs select-none"
                   title="Drag onto canvas or tap to add"
                 >
@@ -933,17 +1007,18 @@ const ArchitectureDesignerCanvas: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         addNode(item.category as any, item.label, item.tech);
                       }}
-                      className="p-1 rounded-md bg-slate-100 dark:bg-[#334155]/60 hover:bg-indigo-100 dark:hover:bg-[#334155] text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer pointer-events-auto"
-                      title="Click to add to canvas"
+                      className="px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer pointer-events-auto shadow-xs"
+                      title="Add component to canvas center"
                     >
                       <Plus className="w-3.5 h-3.5" />
+                      <span className="text-[10px]">Add</span>
                     </button>
                     <GripVertical className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 flex-shrink-0 cursor-grab pointer-events-none" />
                   </div>
@@ -962,18 +1037,9 @@ const ArchitectureDesignerCanvas: React.FC = () => {
           ref={reactFlowWrapper} 
           className="flex-1 h-full relative"
           onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
+          onDragEnter={onDragEnter}
+          onDrop={onDrop}
         >
-          {/* Active Drop Indicator Overlay */}
-          {isDragOver && (
-            <div className="absolute inset-0 pointer-events-none z-30 border-2 border-dashed border-[#06B6D4] bg-[#06B6D4]/10 backdrop-blur-[1px] flex items-center justify-center">
-              <div className="px-4 py-2.5 rounded-xl bg-white/95 dark:bg-[#151C2E]/95 border border-[#06B6D4]/60 shadow-2xl text-xs font-semibold text-cyan-600 dark:text-[#06B6D4] flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-cyan-500 animate-spin" />
-                Drop component here to place on canvas
-              </div>
-            </div>
-          )}
-
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -983,6 +1049,7 @@ const ArchitectureDesignerCanvas: React.FC = () => {
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
             onDragOver={onDragOver}
+            onDragEnter={onDragEnter}
             onDrop={onDrop}
             nodeTypes={nodeTypes}
             fitView
