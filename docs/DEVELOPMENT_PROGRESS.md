@@ -138,4 +138,5 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
      - Adapted walkthrough banners, simulation HUD, and action buttons for flexible wrapping from 360px mobile viewports up to 4K displays.
 - **Frontend**: `frontend/src/context/ThemeContext.tsx`, `frontend/src/index.css`, `frontend/src/main.tsx`, `frontend/src/App.tsx`, `frontend/src/pages/designer/ArchitectureDesignerPage.tsx`, `frontend/src/pages/designer/ArchitectureNode.tsx`, `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
 - **Tests**: Vitest tests passing (`npm test` exit code 0); Vite production build passing (`npm run build` exit code 0); all 30 backend tests passing (`mvn test` exit code 0).
+- **Commit**: `6073ebf` (pushed to `origin main`).
 - **Status**: COMPLETED
