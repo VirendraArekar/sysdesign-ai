@@ -25,8 +25,8 @@ public class SystemDesignCatalogService {
 
     public SystemDesignCatalogService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
-        loadCatalogFromJson();
         initHardcodedTopics();
+        loadCatalogFromJson();
     }
 
     private void loadCatalogFromJson() {

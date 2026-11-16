@@ -31,7 +31,8 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
 | **Phase 17** | Designer End-to-End Drag & Drop Fix, Backend Component Catalog & Validation, Cache Busting | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 1a0128a | SUCCESS |
 | **Phase 18** | Architecture Canvas Flexbox Zero-Height Resolution, Camera Auto-Centering & Visible Node Rendering | COMPLETED | COMPLETED | COMPLETED | COMPLETED | fcc2e07 | SUCCESS |
 | **Phase 19** | Architecture Designer Compact Node Footprint (1/3rd Area Reduction) & Spacing Optimization | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 4144869 | SUCCESS |
-| **Phase 20** | Top Navigation Streamlining, Single-Line Wrap Prevention & Comprehensive Light/Dark Theme Support | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 5524fe4 | SUCCESS |
+| **Phase 22** | Expansion to 105 Comprehensive System Design Topics (HLD & LLD) | COMPLETED | COMPLETED | COMPLETED | COMPLETED | 7397a81 | SUCCESS |
+| **Phase 23** | Domain-Specific HLD & LLD Enrichment Across All 105 Topics & Catalog Initialization Order Fix | COMPLETED | COMPLETED | COMPLETED | COMPLETED | Pending | Pending |
 
 ---
 
@@ -333,4 +334,25 @@ This document tracks feature-by-feature implementation, testing, and GitHub remo
      - Live CDP browser test verified catalog rendering of `SYSTEM DESIGN TOPICS (105)` and captured verification screenshot.
 - **Backend**: `backend/src/main/resources/data/topics-catalog.json`, `backend/src/main/java/com/sysdesign/modules/practice/service/SystemDesignCatalogService.java`, `backend/src/test/java/com/sysdesign/modules/practice/PracticeServiceTest.java`.
 - **Frontend**: `frontend/src/pages/topics/TopicsExplorerPage.tsx`.
+- **Commit**: `7397a81` (pushed to `origin main`).
+- **Status**: COMPLETED
+
+### Phase 23: Domain-Specific HLD & LLD Architectural Enrichment & Catalog Service Ordering Fix
+- **Scope & Improvements**:
+  - Enriched every single topic across the 105 catalog entries with domain-specific, realistic architectural HLD points, LLD OOP design pattern points, explanations, and accurate category mapping (Infrastructure, Social Media, E-Commerce, Fintech, Mobility & IoT, Gaming, Object-Oriented Design, Concurrency & Algorithms).
+  - Fixed initialization sequence in `SystemDesignCatalogService.java`: called `initHardcodedTopics()` first and `loadCatalogFromJson()` second so that the 105 comprehensive topics from `/data/topics-catalog.json` properly serve as the authoritative single source of truth without being overridden by default seed structures.
+  - Category mapping alignment: refined categories such as `uber-ride-matching`, `food-delivery-routing`, `dynamic-surge-pricing`, and `car-rental-system` to **Mobility & IoT**, and `splitwise-expense-sharing` and `atm-state-machine` to **Fintech**.
+  - Generated domain-specific scaling points:
+    - **Fintech**: Double-entry bookkeeping ledger equations, idempotency keys, CEP fraud risk scoring, row-level pessimistic locks, and WORM-compliant audit logs.
+    - **Social Media**: Hybrid push/pull fan-out models, stateful WebSocket gateways, multipart direct S3 uploads, and ML-driven feed ranking.
+    - **Mobility & IoT**: Uber H3 geospatial hexagonal indexing, MQTT telemetry heartbeats, Hungarian bipartite batch dispatch, and Kalman filter dead-reckoning.
+    - **Gaming**: UDP 60 Hz tick-rate synchronization, ELO/MMR matchmaking pools, Redis ZSET leaderboards, and spatial grid visibility culling.
+    - **LLD / OOP**: Gang of Four patterns (State, Strategy, Composite, Observer, Decorator, Builder), thread-safety primitives (Atomic primitives, ReentrantLock, StampedLock), and domain contract invariants.
+- **Verification & Deployment**:
+  - Backend test suite: all 33 unit and integration tests passing (`mvn -f backend/pom.xml test`).
+  - Frontend test suite: all 5 Vitest component tests passing (`npm --prefix frontend test`).
+  - Production build: Vite bundle built in 25.8s with 0 errors (`npm --prefix frontend run build`).
+  - Container deployment: rebuilt and restarted Docker services; verified live API returning 105 topics with domain-specific points across 9 distinct categories.
+  - Automated browser verification: CDP script confirmed live rendering of `TOPICS (105)` on `http://localhost:3000/topics`, verified interactive HLD/LLD switching, and captured verification screenshots.
+- **Backend**: `backend/src/main/resources/data/topics-catalog.json`, `backend/src/main/resources/data/generate_all_105_topics.py`, `backend/src/main/java/com/sysdesign/modules/practice/service/SystemDesignCatalogService.java`.
 - **Status**: COMPLETED
